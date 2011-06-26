@@ -1,0 +1,3 @@
+Powerfull program for Archlinux distribution
+Helps to downgrade packages, if last installed version is unstabe.
+Works with AUR, ARM and pacman log`s
