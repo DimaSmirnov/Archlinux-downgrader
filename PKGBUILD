@@ -5,7 +5,7 @@ pkgver=0.15
 pkgrel=1
 pkgdesc="Powerful packages downgrader for Archlinux. Works with AUR, ARM and pacman logs"
 arch=(i686 x86_64)
-license=('GPL2')
+license=("GPL")
 url="https://github.com/DimaSmirnov/Archlinux-downgrader"
 _gitroot="git://github.com/DimaSmirnov/Archlinux-downgrader.git"
 _gitname="Archlinux-downgrader"
@@ -25,7 +25,6 @@ build() {
   rm -rf $_gitname-build
   git clone $_gitname $_gitname-build
   cd "$_gitname-build"
-
  ./configure --prefix=/usr
  make
 }

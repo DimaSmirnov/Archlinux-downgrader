@@ -34,6 +34,6 @@ void ShowStartWindow(long int actions_counter, struct packs packages[]) {
 }
 ///////////////////////////////////////////
 int ShowHelpWindow() {
-	printf ("Downgrader. ver 0.1\n Usage:\n -d YYYY-MM-DD = Downgrade to date\n -l N = Downgrade N packages\n -p NAME = Downgrade package NAME\n -s = Pacman statistic\n\n");
+	printf ("Downgrader. ver 0.1\n Usage:\n -l N = Downgrade N packages\n -p NAME = Downgrade package NAME\n\n");
 	
 }
