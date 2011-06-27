@@ -13,7 +13,7 @@ void ShowStartWindow(long int actions_counter, struct packs packages[]) {
 	printf("Please select necessary operation:\n");
 	printf("1. Downgrade 1 package\n");	
 	printf("2. Downgrade some last packages\n");
-	printf("3. Downgrade all packages to date (restore packages situation to necessary date)\n\n");
+	//printf("3. Downgrade all packages to date (restore packages situation to necessary date)\n\n");
 	printf("Enter operation number: ");
 	scanf ("%d",&op_number);
 
