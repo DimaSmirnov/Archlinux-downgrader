@@ -20,7 +20,8 @@ downgrader_SOURCES = \
 	http.cc     \
 	interface.cc
 
-downgrader_LDFLAGS = 
+downgrader_LDFLAGS = \
+	-lalpm
 
 downgrader_LDADD = 
 

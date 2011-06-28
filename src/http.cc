@@ -123,21 +123,21 @@ char *build_get_query(char *host, char *page) {
 
 }
 ///////////////////////////////////////////////////////
-void ReadARM(char* package, char* ARMbuffer) {
+int ReadArm(char* package, struct arm_packs arm_packages[]) {
   struct sockaddr_in *remote;
   int sock, tmpres, port=80;
-  char *architecture, *ip, *get, buf[BUFSIZ+1];
-  char host[40], page[80];
+  char arch1[80], *architecture,  *ip, *get, buf[BUFSIZ+1];
+  char host[40], page[80];//, ARMbuffer[3000];
 	
-	if(sizeof(void*) == 4) architecture = (char *)"32";
-	else if (sizeof(void*) == 8) architecture = (char *)"64";
+	if(sizeof(void*) == 4) { architecture = (char *)"32";  }//strcpy(arch1,"i686") ; }
+	else if (sizeof(void*) == 8) { architecture = (char *)"64"; }//strcpy(arch1,"x86_64"); }
 	
 	strcpy(host,"arm.konnichi.com");
 	strcpy(page,"search/raw.php?a=");
 	strcat(page,architecture);
-	strcat(page,"&q=");	
+	strcat(page,"&q=^");	
 	strcat(page,package);	
-	strcat(page,"&core=1&extra=1&community=1");
+	strcat(page,"%24&core=1&extra=1&community=1");
 
   if((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
     perror("Can't create TCP socket. Internal error 1");
@@ -181,7 +181,9 @@ void ReadARM(char* package, char* ARMbuffer) {
   }
   memset(buf, 0, sizeof(buf));
   int htmlstart = 0;
-  char * htmlcontent, *string;
+  char  *htmlcontent, *string, *str, *pch, *first, *last;
+char temp[100];
+	
   while((tmpres = recv(sock, buf, BUFSIZ, 0)) > 0){
     if(htmlstart == 0) {
 		  htmlcontent = strstr(buf, "\r\n\r\n");
@@ -193,11 +195,11 @@ void ReadARM(char* package, char* ARMbuffer) {
 	else {
 		htmlcontent = buf;
    }
-    if(htmlstart){
+   // if(htmlstart){
 		///////////////
-		strcpy(ARMbuffer,htmlcontent);
+		//strcat(htmlcontent,buf);
 		/////////////////
-    }
+  //  }
   }
   if(tmpres < 0) {
     perror("Error receiving data from ARM. Please check your internet connection");
@@ -205,4 +207,25 @@ void ReadARM(char* package, char* ARMbuffer) {
   free(get);
   free(remote);
   free(ip);
+
+if (!strlen(htmlcontent)) {
+	return 1;
 }
+// Обрабатываем данные из арм
+else {
+	int i=0;
+	str = strtok(htmlcontent, "\n");
+	strcpy(arm_packages[i].full_path,str);
+	//printf ("%s\n",str);
+	i++;
+	while(str = strtok(NULL, "\n")) {
+		if (!str) break;
+		last = &str[strlen(str)-3];
+		if (strcmp(last,"sig")) strcpy(arm_packages[i].full_path,str);
+		//printf("%s\n", str);
+		i++;
+	}
+}
+return 0;
+}
+

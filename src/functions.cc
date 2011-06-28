@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <var.h>
 //#include <locale.h>
+//#include <alpm.h>
+//#include <alpm_list.h>
 
 long int ReadPacmanLog(struct packs packages[], FILE  *pFile2) {
 
@@ -10,7 +12,9 @@ int action_counter=0;
 char string[251];
 char *p, *chop, *date, *time, *operat, *pack_name, *cur_version, *prev_version;
 
-        while (!feof(pFile2)) {  // Читаем историю апгрейдов
+//struct arm_packs  *arm_packages = (struct arm_packs *)malloc(sizeof(struct arm_packs)*1000);
+
+        while (!feof(pFile2)) {  // Читаем историю апгрейдов из логов
 				
                 chop = fgets(string,250,pFile2); if (!chop) break;
 				date = strtok(string," ");
@@ -24,53 +28,24 @@ char *p, *chop, *date, *time, *operat, *pack_name, *cur_version, *prev_version;
 								prev_version++;
 								cur_version = strtok(NULL," ");
 								cur_version = strtok(NULL,")");				
-								//printf("date: %s\n",date);
 								strcpy(packages[action_counter].date,date);
-								//printf("time: %s\n",time);
 								strcpy(packages[action_counter].time,time);
-								//printf("package: %s\n",pack_name);
 								strcpy(packages[action_counter].name,pack_name);
-								//printf("Action: %s\n",operat);
 								strcpy(packages[action_counter].action,operat);
-								//printf("Current version: %s\n",cur_version);
 								strcpy(packages[action_counter].cur_version,cur_version);
-								//printf("Prev version: %s\n",prev_version);
 								strcpy(packages[action_counter].prev_version,prev_version);
-								//printf("\n");
 								action_counter++;
 				}
 				if (!strcmp(operat,"installed")) {
 								cur_version = strtok(NULL,")");
 								cur_version++;				
-								//printf("date: %s\n",date);
 								strcpy(packages[action_counter].date,date);
-								//printf("time: %s\n",time);
 								strcpy(packages[action_counter].time,time);
-								//printf("package: %s\n",pack_name);
 								strcpy(packages[action_counter].name,pack_name);
-								//printf("Action: %s\n",operat);
 								strcpy(packages[action_counter].action,operat);
-								//printf("Current version: %s\n",cur_version);
 								strcpy(packages[action_counter].cur_version,cur_version);
-								//printf("\n");
 								action_counter++;
 				}
-                 if (!strcmp(operat,"removed")) {
-                              cur_version = strtok(NULL,")");
-                              cur_version++;
-                              //printf("date: %s\n",date);
-                              strcpy(packages[action_counter].date,date);
-                              //printf("time: %s\n",time);
-                              strcpy(packages[action_counter].time,time);
-                              //printf("package: %s\n",pack_name);
-                              strcpy(packages[action_counter].name,pack_name);
-                              //printf("Action: %s\n",operat);
-							  strcpy(packages[action_counter].action,operat);
-                              //printf("Current version: %s\n",cur_version);
-                              strcpy(packages[action_counter].cur_version,cur_version);
-                              //printf("\n");
-                              action_counter++;
-                 }
        }
    return action_counter;
 }
@@ -99,102 +74,90 @@ int DowngradeLastPackages (int pack_qty, long int actions_counter,  struct packs
 }
 /////////////////////////////////////////////
 int SilentDowngradePackage (char* pack_name, long int actions_counter, struct packs packages[]) {
-	char *architecture, ARMContent[30000], *string, *chop, syztem[100], full_pack_name[50], full_path_to_packet[100];
+	char *architecture, *string, *chop, syztem[100], full_pack_name[50], full_path_to_packet[100], pack_ver[20];
 	long int actions = actions_counter;
+	int pac_flag=0;
 	FILE *pFile;
+
+	struct arm_packs  *arm_packages = (struct arm_packs *)malloc(sizeof(struct arm_packs)*1000);
+
 	
 	if(sizeof(void*) == 4) architecture = (char *)"i686";
 	else if (sizeof(void*) == 8) architecture = (char *)"x86_64";
 
+	//alpm_initialize();
+	//alpm_option_set_dbpath("/var/lib/pacman");
+
 	printf("\n \033[1;%dm --> Downgrade package %s \033[0m", 31, pack_name);
-	strcpy (full_pack_name,pack_name);
-	strcat (full_pack_name,"-");
+	
 
-	for (;actions_counter>0;actions_counter--) {
-		if (!strcmp(pack_name,packages[actions_counter].name) && !strcmp("upgraded",packages[actions_counter].action)) { // нашли нужный пакет для апгрейда
-			if (strcmp(packages[actions_counter].cur_version, packages[actions_counter].prev_version)) { // если был апгрейд на ту же версию, то ищем дальше
-				printf("\033[1;%dm(%s) \033[0m  \n", 31, packages[actions_counter].cur_version);				
-				strcat (full_pack_name, packages[actions_counter].prev_version);
-				strcat (full_pack_name,"-");
-				strcat (full_pack_name,architecture);
-				strcat (full_pack_name,".pkg.tar.xz");
-				strcpy (full_path_to_packet,"/var/cache/pacman/pkg/");
-				strcat (full_path_to_packet,full_pack_name);	
-				pFile=fopen(full_path_to_packet,"r");
-				if (pFile==NULL) { // в локалке пакет не найден
-					ReadARM(pack_name, &ARMContent[0]); 
-					char* pack_path = GetPrevPackageFromARM(pack_name, full_pack_name, &ARMContent[0]);
-					if (pack_path) { // зато он есть в АРМ!
-						printf("Downgrade %s from ARM\n", full_pack_name);						
-						strcpy(syztem,"sudo pacman -U ");
-						strcat(syztem, pack_path);
-						system(syztem);
-						return 1;
-					}
-				}
-				else { // предыдущая версия пакета существует в локалке, кайф!
-					printf("Downgrade %s from cache\n", full_pack_name);
-					strcpy(syztem,"sudo pacman -U "); // установка
-					strcat(syztem,full_path_to_packet);
-					system(syztem);
-					fclose(pFile);
-					return 1;
-				}
-				break;
-			}
-		}
-	}
-
-	int result, res; // пакета нет в локалке и АРМ
+	int aur_result, res;
 	char *inp, *line = NULL;
 	size_t len = 0;
-	result = IsPackageInAur (pack_name); // а может он в аур ?
-	if (result) { 
-		printf("Package %s is in AUR, downgrade cancelled, delete this package from system ? [y/n] ", pack_name);
+	aur_result = IsPackageInAur (pack_name); // Первым проверяем аур, пакет в нем  ?
+	if (aur_result) { 
+		printf("\nPackage %s is in AUR, downgrade cancelled, delete this package from system ? [y/n] ", pack_name);
 		while (getline (&line, &len, stdin) >= 0) {
 			res = rpmatch (line);
 			if (res >= 0) {
-				if (res > 0) printf("sudo pacman -R %s\n", pack_name);
-				break;
+                           char buf[50];
+                           sprintf(buf,"sudo pacman -R %s\n", pack_name);
+                           system(buf);
 			}
 		}
 		free (line);
 		return 1;
-	}
-	else { // значит откатываемый пакет был установлен, но не "прокачан" ни разу
-		result = SearchPrevVersionInARM (pack_name, actions, &packages[0], &ARMContent[0]);
-		if (result==1) { // в ARM предыдущей версии нет тоже =(   skype, например
-			printf("Sorry, but previously version %s not found, delete this package from system ? [y/n] ", pack_name);
-			while (getline (&line, &len, stdin) >= 0) {
-				int res = rpmatch (line);
-				if (res >= 0) {
-					if (res > 0) printf("sudo pacman -R %s\n", pack_name);
-					break;
-				}
-			}
-			free (line);
-			return 1;
-		}
-		else {
-			printf("Package %s is new, and never downgrade, probably problem in this package.\n", pack_name);
-			printf("Otherwise previously version possible in ARM. What to do ?\n", pack_name);
-			printf("1 - delete package.  2 - downgrade package: ");
-			int i=0;  char buv[50];
-			scanf("%d",&i);
-			if (i==1) {
-				sprintf(buv, "sudo pacman -R %s", pack_name);
-				printf("%s\n", buv);
-			}
-			//if (i==2) {  InstallPrevVersionFromARM(); }
+	} // В Аур пакета нет
+	
 
+	
+	strcpy (full_pack_name,pack_name);
+	strcat (full_pack_name,"-");
+
+	for (;actions_counter>0;actions_counter--) {
+		if (!strcmp(pack_name,packages[actions_counter].name) && !strcmp("installed",packages[actions_counter].action)) { // нашли версию
+				strcpy (pack_ver,packages[actions_counter].cur_version);
+				pac_flag=1;
 		}
+		
+		if (!strcmp(pack_name,packages[actions_counter].name) && !strcmp("upgraded",packages[actions_counter].action)) { // нашли нужный пакет для апгрейда
+			strcpy (pack_ver,packages[actions_counter].cur_version);
+			pac_flag=1;
+			if (strcmp(packages[actions_counter].cur_version, packages[actions_counter].prev_version)) { // если был апгрейд на ту же версию, то ищем дальше
+					printf("\033[1;%dm(%s) \033[0m  \n", 31, packages[actions_counter].cur_version);				
+					strcat (full_pack_name, packages[actions_counter].prev_version);
+					strcpy (pack_ver,packages[actions_counter].cur_version);
+					strcat (full_pack_name,"-");
+					strcat (full_pack_name,architecture);
+					strcat (full_pack_name,".pkg.tar.xz");
+					strcpy (full_path_to_packet,"/var/cache/pacman/pkg/");
+					strcat (full_path_to_packet,full_pack_name);	
+					pFile=fopen(full_path_to_packet,"r");
+					if (!pFile) {// предыдущая версия пакета существует в локалке, кайф!
+						printf("Downgrade %s from cache\n", full_pack_name);
+						strcpy(syztem,"sudo pacman -U "); // установка
+						strcat(syztem,full_path_to_packet);
+						system(syztem);
+						return 1;
+					}
+					else fclose(pFile);
+			}
+		}
+	}
+	if (!pac_flag) { printf ("\nNo information in logs about this package. Terminating\n"); return 0; }
+	
+	int arm_flag = ReadArm(pack_name, &arm_packages[0]);
+	if (arm_flag==1) { printf ("\nSorry, noone source have not information about this package. Terminating\n"); return 1; }
+	char* arm = IsPackageInArm(pack_name, pack_ver, &arm_packages[0]);
+	if (arm) { 
+			printf("\033[1;%dm(%s) \033[0m  \n", 31, pack_ver);	
+			printf("Downgrade %s from ARM\n", pack_name);
+			strcpy(syztem,"sudo pacman -U "); // установка
+			strcat(syztem,arm);
+			system(syztem);
+			return 1;
 	}
 	return 0;
-}
-/////////////////////////////////////////////
-int PacmanStatistic (int actions_counter) {
-	printf ("Статистика pacman:\n"); 
-	printf ("Всего операций в логах: %d\n", actions_counter); 	
 }
 /////////////////////////////////////////////
 long int GetPacmanSize(FILE  *pFile) {
@@ -222,25 +185,13 @@ int VersionParser(char* version1, char* version2) {
 	return ret;
 }
 
-/////////////////////////////////////////////
-int SearchPrevVersionInARM (char* pack_name,  long int actions_counter, struct packs packages[], char* ARMbuffer) {
-	char *architecture, full_pack_name[50];
-
-	if(sizeof(void*) == 4) architecture = (char *)"i686";
-	else if(sizeof(void*) == 8) architecture = (char *)"x86_64";
-	
-	strcpy (full_pack_name,pack_name);
-	strcat (full_pack_name,"-");
-	for (;actions_counter>0;actions_counter--) {
-		if (!strcmp(pack_name,packages[actions_counter].name) && !strcmp("installed",packages[actions_counter].action)) {	// Нашли текущую установленную версию
-			printf("Нашли текущую установленную версию: %s\n", packages[actions_counter].cur_version);
-			//char* ver2 = "2.4.4-4";
-			//char* ver1 = "20110528-2";
-			//int res = VersionParser(ver1, ver2);
-			//if (res==0) printf("First version is fresh!\n");
-			//if (res==1) printf("Second version is fresh!\n");
-			//if (res==-1) printf("Versions is equal!\n");
-		}
+/////////////////////////////////////////
+char* IsPackageInArm(char *package, char *version, struct arm_packs arm_packages[]) {
+	char *arm;
+	int i=0;
+	while(arm_packages[i].full_path) {
+		if (strstr(arm_packages[i].full_path,version)) { return arm_packages[i-1].full_path; }
+		i++;
 	}
 	return 0;
 }

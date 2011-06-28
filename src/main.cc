@@ -12,7 +12,8 @@ int main(int argc, char **argv)
 		pFile=fopen("/var/log/pacman.log","r");
 		long int actions_counter = GetPacmanSize(pFile); // узнаем нужный размер структуры и выделяем память для базы
 		struct packs  *packages = (struct packs *)malloc(sizeof(struct packs)*actions_counter);
-		//struct cur_packs  *cur_packages = (struct cur_packs *)malloc(sizeof(struct cur_packs)*actions_counter);
+		struct arm_packs  *arm_packages = (struct arm_packs *)malloc(sizeof(struct arm_packs)*1000);
+
 		rewind(pFile);
         actions_counter = ReadPacmanLog(&packages[0], pFile);
         fclose(pFile);
@@ -23,7 +24,6 @@ int main(int argc, char **argv)
 			if(!strcmp(argv[1], "-h")) start_flag=6;
 			else if(!strcmp(argv[1], "-l")) start_flag=3;
 			else if(!strcmp(argv[1], "-p")) start_flag=4;
-			else if(!strcmp(argv[1], "-s")) start_flag=5;
 		}
 
 		//if (start_flag==1) DowngradeToDate (argv[2]);
@@ -31,7 +31,6 @@ int main(int argc, char **argv)
 		if (start_flag==2) ShowStartWindow(actions_counter,&packages[0]);
 		else if (start_flag==3) DowngradeLastPackages (atoi(argv[2]), actions_counter, &packages[0]);
 		else if (start_flag==4) SilentDowngradePackage (argv[2], actions_counter,&packages[0]);
-		else if (start_flag==5) PacmanStatistic (actions_counter);
 		else if (start_flag==6) ShowHelpWindow();
 
 		free (packages);
