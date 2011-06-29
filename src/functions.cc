@@ -132,16 +132,16 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 				strcpy (pack_ver,packages[actions_counter].cur_version);
 				pac_flag=1;
 		}
-		
 		if (!strcmp(pack_name,packages[actions_counter].name) && !strcmp("upgraded",packages[actions_counter].action)) { // нашли нужный пакет для апгрейда
 			strcpy (pack_ver,packages[actions_counter].cur_version);
 			pac_flag=1;
 			strcpy (full_pack_name,pack_name);
 			strcat (full_pack_name,"-");
 			if (strcmp(packages[actions_counter].cur_version, packages[actions_counter].prev_version)) { // если был апгрейд на ту же версию, то ищем дальше
-					strcpy (pack_prev_ver,packages[actions_counter].cur_version);
-					strcat (full_pack_name, packages[actions_counter].prev_version);
+					strcpy (pack_prev_ver,packages[actions_counter].prev_version);
 					strcpy (pack_ver,packages[actions_counter].cur_version);
+				
+					strcat (full_pack_name, packages[actions_counter].prev_version);
 					strcat (full_pack_name,"-");
 					strcat (full_pack_name,architecture);
 					strcat (full_pack_name,".pkg.tar.xz");
@@ -151,16 +151,16 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 			}
 		}
 	}
-					printf("\033[1;%dm(%s) \033[0m  \n", 31, pack_prev_ver);
+					printf("%s -> %s\n", pack_ver, pack_prev_ver);
 					pFile=fopen(full_path_to_packet,"r");
-					if (!pFile) {// предыдущая версия пакета существует в локалке, кайф!
+					if (pFile) {// предыдущая версия пакета существует в локалке, кайф!
 						printf("Downgrade %s from cache\n", full_pack_name);
 						strcpy(syztem,"sudo pacman -U "); // установка
 						strcat(syztem,full_path_to_packet);
 						system(syztem);
+						fclose(pFile);
 						return 1;
 					}
-					else fclose(pFile);
 
 	if (!pac_flag) { printf ("\nNo information in logs about this package. Terminating\n"); return 0; }
 	int arm_flag = ReadArm(pack_name, &arm_packages[0]);
