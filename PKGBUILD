@@ -5,6 +5,7 @@ pkgver=0.15
 pkgrel=1
 pkgdesc="Powerful packages downgrader for Archlinux. Works with AUR, ARM and pacman logs"
 arch=(i686 x86_64)
+depends=(git)
 license=("GPL")
 url="https://github.com/DimaSmirnov/Archlinux-downgrader"
 _gitroot="git://github.com/DimaSmirnov/Archlinux-downgrader.git"
