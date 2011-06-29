@@ -72,15 +72,7 @@ int DowngradeLastPackages (int pack_qty, long int actions_counter,  struct packs
 		}
 	}
 }
-////////////////////////////////
-int pkg_cmp(const void *v1, const void *v2)
-{
-    pmpkg_t *p1 = (pmpkg_t *)v1;
-    pmpkg_t *p2 = (pmpkg_t *)v2;
-    unsigned long int s1 = alpm_pkg_get_size(p1);
-    unsigned long int s2 = alpm_pkg_get_size(p2);
-    return(s2 - s1);
-}
+
 /////////////////////////////////////////////
 int SilentDowngradePackage (char* pack_name, long int actions_counter, struct packs packages[]) {
 	char *architecture, *string, *chop, syztem[100], full_pack_name[50], full_path_to_packet[100], pack_ver[20], pack_prev_ver[40];
@@ -89,16 +81,9 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 	FILE *pFile;
 
 	struct arm_packs  *arm_packages = (struct arm_packs *)malloc(sizeof(struct arm_packs)*1000);
-
 	
 	if(sizeof(void*) == 4) architecture = (char *)"i686";
 	else if (sizeof(void*) == 8) architecture = (char *)"x86_64";
-
-//	pmdb_t *db = NULL;
-//	alpm_list_t *i;
-//	alpm_initialize();
-//	alpm_option_set_dbpath("/var/lib/pacman");
- //	db = alpm_db_register_local();
 
 	
 	printf("\n \033[1;%dm --> Downgrade package %s \033[0m", 31, pack_name);
@@ -137,7 +122,7 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 			strcpy (full_pack_name,pack_name);
 			strcat (full_pack_name,"-");
 			if (strcmp(packages[actions_counter].cur_version, packages[actions_counter].prev_version)) { // если был апгрейд на ту же версию, то ищем дальше
-					strcpy (pack_prev_ver,packages[actions_counter].prev_version);
+					//strcpy (pack_prev_ver,packages[actions_counter].prev_version);
 					strcpy (pack_ver,packages[actions_counter].cur_version);
 				
 					strcat (full_pack_name, packages[actions_counter].prev_version);
@@ -150,7 +135,7 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 			}
 		}
 	}
-					printf("%s -> %s\n", pack_ver, pack_prev_ver);
+					printf("\033[1;%dm(%s) \033[0m  \n", 31, pack_ver);	
 					pFile=fopen(full_path_to_packet,"r");
 					if (pFile) {  // предыдущая версия пакета существует в локалке, кайф!
 						printf("Downgrade %s from cache\n", full_pack_name);
@@ -165,11 +150,11 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 	int arm_flag = ReadArm(pack_name, &arm_packages[0]);
 	if (arm_flag==1) { printf ("\nSorry, noone source have not information about this package. Terminating\n"); return 1; }
 	char* arm = IsPackageInArm(pack_name, pack_ver, &arm_packages[0]);
-	if (arm) { 
-			printf("\033[1;%dm(%s) \033[0m  \n", 31, pack_ver);	
+	if (arm) {
 			printf("Downgrade %s from ARM\n", pack_name);
 			strcpy(syztem,"sudo pacman -U "); // установка
 			strcat(syztem,arm);
+	//printf("%s\n", syztem);
 			system(syztem);
 			return 1;
 	}
@@ -203,11 +188,26 @@ int VersionParser(char* version1, char* version2) {
 
 /////////////////////////////////////////
 char* IsPackageInArm(char *package, char *version, struct arm_packs arm_packages[]) {
-	char *arm;
-	int i=0;
-	while(arm_packages[i].full_path) {
-		if (strstr(arm_packages[i].full_path,version)) { return arm_packages[i-1].full_path; }
+	//char *arm;
+	int i=0,arm_flag=0;
+	while(strcmp(arm_packages[i].full_path,"")) {
+		//if (!arm_packages[i].full_path) break;
+		if (arm_flag==0 && strstr(arm_packages[i].full_path,package)) {
+			arm_flag=1;
+			//printf("--%s--\n",arm_packages[i].full_path);
+		}
+	//	if (i>=2675) {
+			//printf("%d\n",i);
+	//		printf("--%s--\n",arm_packages[i].full_path);
+	//	}
+
+		if (strstr(arm_packages[i].full_path,version)) { 
+			if (!arm_packages[i-1].full_path) i=i-2;
+			else i--;
+			return arm_packages[i].full_path;
+		}
 		i++;
 	}
-	return 0;
+	if (arm_flag==1) return arm_packages[i-1].full_path; 
+	else return NULL;
 }

@@ -216,12 +216,15 @@ else {
 	int i=0;
 	str = strtok(htmlcontent, "\n");
 	strcpy(arm_packages[i].full_path,str);
-	i++;
 	while(str = strtok(NULL, "\n")) {
 		if (!str) break;
-		last = &str[strlen(str)-3];
-		if (strcmp(last,"sig")) strcpy(arm_packages[i].full_path,str);
 		i++;
+		last = &str[strlen(str)-3];
+		//printf("%s\n", str);
+		if (strcmp(last,"sig")) {
+			strcpy(arm_packages[i].full_path,str);
+		//	printf("%s\n", arm_packages[i].full_path);
+		}
 	}
 }
 return 0;
