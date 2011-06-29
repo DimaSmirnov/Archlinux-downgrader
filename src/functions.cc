@@ -112,14 +112,13 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 		printf("\nPackage %s is in AUR, downgrade cancelled, delete this package from system ? [y/n] ", pack_name);
 		while (getline (&line, &len, stdin) >= 0) {
 			res = rpmatch (line);
-			if (res >= 0) {
+			if (res > 0) {
                            char buf[50];
                            sprintf(buf,"sudo pacman -R %s\n", pack_name);
                            system(buf);
 			}
+			else { free (line); return 1; }
 		}
-		free (line);
-		return 1;
 	} // В Аур пакета нет
 	
 
@@ -153,7 +152,7 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 	}
 					printf("%s -> %s\n", pack_ver, pack_prev_ver);
 					pFile=fopen(full_path_to_packet,"r");
-					if (pFile) {// предыдущая версия пакета существует в локалке, кайф!
+					if (pFile) {  // предыдущая версия пакета существует в локалке, кайф!
 						printf("Downgrade %s from cache\n", full_pack_name);
 						strcpy(syztem,"sudo pacman -U "); // установка
 						strcat(syztem,full_path_to_packet);
