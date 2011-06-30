@@ -195,11 +195,6 @@ char temp[100];
 	else {
 		htmlcontent = buf;
    }
-   // if(htmlstart){
-		///////////////
-		//strcat(htmlcontent,buf);
-		/////////////////
-  //  }
   }
   if(tmpres < 0) {
     perror("Error receiving data from ARM. Please check your internet connection");
@@ -220,10 +215,8 @@ else {
 		if (!str) break;
 		i++;
 		last = &str[strlen(str)-3];
-		//printf("%s\n", str);
 		if (strcmp(last,"sig")) {
 			strcpy(arm_packages[i].full_path,str);
-		//	printf("%s\n", arm_packages[i].full_path);
 		}
 	}
 }

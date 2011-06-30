@@ -12,8 +12,6 @@ int action_counter=0;
 char string[251];
 char *p, *chop, *date, *time, *operat, *pack_name, *cur_version, *prev_version;
 
-//struct arm_packs  *arm_packages = (struct arm_packs *)malloc(sizeof(struct arm_packs)*1000);
-
         while (!feof(pFile2)) {  // Читаем историю апгрейдов из логов
 				
                 chop = fgets(string,250,pFile2); if (!chop) break;
@@ -87,7 +85,6 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 
 	
 	printf("\n \033[1;%dm --> Downgrade package %s \033[0m", 31, pack_name);
-	
 
 	int aur_result, res;
 	char *inp, *line = NULL;
@@ -105,9 +102,7 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 			else { free (line); return 1; }
 		}
 	} // В Аур пакета нет
-	
 
-	
 	strcpy (full_pack_name,pack_name);
 	strcat (full_pack_name,"-");
 
@@ -122,9 +117,7 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 			strcpy (full_pack_name,pack_name);
 			strcat (full_pack_name,"-");
 			if (strcmp(packages[actions_counter].cur_version, packages[actions_counter].prev_version)) { // если был апгрейд на ту же версию, то ищем дальше
-					//strcpy (pack_prev_ver,packages[actions_counter].prev_version);
 					strcpy (pack_ver,packages[actions_counter].cur_version);
-				
 					strcat (full_pack_name, packages[actions_counter].prev_version);
 					strcat (full_pack_name,"-");
 					strcat (full_pack_name,architecture);
@@ -154,7 +147,6 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 			printf("Downgrade %s from ARM\n", pack_name);
 			strcpy(syztem,"sudo pacman -U "); // установка
 			strcat(syztem,arm);
-	//printf("%s\n", syztem);
 			system(syztem);
 			return 1;
 	}
@@ -188,19 +180,11 @@ int VersionParser(char* version1, char* version2) {
 
 /////////////////////////////////////////
 char* IsPackageInArm(char *package, char *version, struct arm_packs arm_packages[]) {
-	//char *arm;
 	int i=0,arm_flag=0;
 	while(strcmp(arm_packages[i].full_path,"")) {
-		//if (!arm_packages[i].full_path) break;
 		if (arm_flag==0 && strstr(arm_packages[i].full_path,package)) {
 			arm_flag=1;
-			//printf("--%s--\n",arm_packages[i].full_path);
 		}
-	//	if (i>=2675) {
-			//printf("%d\n",i);
-	//		printf("--%s--\n",arm_packages[i].full_path);
-	//	}
-
 		if (strstr(arm_packages[i].full_path,version)) { 
 			if (!arm_packages[i-1].full_path) i=i-2;
 			else i--;
