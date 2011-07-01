@@ -78,22 +78,6 @@ int IsPackageInAur(char* package) {
   	return 0;
 }
 ///////////////////////////////////////////////////////
-char* GetPrevPackageFromARM(char* package, char* full_package, char* ARMContent) {
-  char *string;	
-		string=strtok(ARMContent,"\n"); // данные из ARM разделены знаком "\n"
-		while (ARMContent) {
-			string=strtok(NULL,"\n");
-			if (!string) break;
-			char* pch = strstr(string,full_package); 
-			if (pch) {
-				if (!strcmp(pch,full_package)) { // нашли нужную версию пакета в ARM
-					return string;
-				}
-			}
-		}
-		return 0;
-    }
-///////////////////////////////////////////////////////
 char *get_ip(char *host) {
   struct hostent *hent;
   int iplen = 15; //XXX.XXX.XXX.XXX

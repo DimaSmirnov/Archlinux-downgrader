@@ -58,13 +58,9 @@ int DowngradeLastPackages (int pack_qty, long int actions_counter,  struct packs
 	for (;actions_counter>0;actions_counter--) {
 		if (!strcmp("upgraded",packages[actions_counter].action)) { // нашли нужный пакет для апргрейда
 			if (strcmp(packages[actions_counter].cur_version, packages[actions_counter].prev_version)) { // если был апгрейд на другую версию, то ищем дальше
-				int reso = IsPackageInAur(packages[actions_counter].name);
-				if (reso==1) printf("Package %s located in AUR, downgrade cancelled\n",packages[actions_counter].name);
-				else {
 					SilentDowngradePackage(packages[actions_counter].name, actions_counter, &packages[0]);
 					pack_qty--;
 					if (pack_qty==0) break;
-				}
 				i++;
 			}
 		}
@@ -90,27 +86,29 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 	char *inp, *line = NULL;
 	size_t len = 0;
 	aur_result = IsPackageInAur (pack_name); // Первым проверяем аур, пакет в нем  ?
-	if (aur_result) { 
-		printf("\nPackage %s is in AUR, downgrade cancelled, delete this package from system ? [y/n] ", pack_name);
-		while (getline (&line, &len, stdin) >= 0) {
-			res = rpmatch (line);
-			if (res > 0) {
-                           char buf[50];
-                           sprintf(buf,"sudo pacman -R %s\n", pack_name);
-                           system(buf);
+	if (aur_result) {
+		pac_flag = IsPackageInstalled(pack_name, actions, &packages[0]);
+		if (pac_flag) {
+			printf("\nPackage '%s' is in AUR, downgrade cancelled \ndelete this package from system ? [y/n] ", pack_name);
+			while (getline (&line, &len, stdin) >= 0) {
+				res = rpmatch (line);
+				if (res > 0) {
+							   char buf[50];
+							   sprintf(buf,"sudo pacman -R %s\n", pack_name);
+							   system(buf);
+							   return 0;
+				}
+				else { free (line); return 1; }
 			}
-			else { free (line); return 1; }
 		}
+		else { printf("\nSorry, package '%s', isn`t installed. Terminating", pack_name); return 1; }
 	} // В Аур пакета нет
 
 	strcpy (full_pack_name,pack_name);
 	strcat (full_pack_name,"-");
 
 	for (;actions_counter>0;actions_counter--) {
-		if (!strcmp(pack_name,packages[actions_counter].name) && !strcmp("installed",packages[actions_counter].action)) { // нашли версию
-				strcpy (pack_ver,packages[actions_counter].cur_version);
-				pac_flag=1;
-		}
+		pac_flag = IsPackageInstalled(pack_name, actions, &packages[0]);
 		if (!strcmp(pack_name,packages[actions_counter].name) && !strcmp("upgraded",packages[actions_counter].action)) { // нашли нужный пакет для апгрейда
 			strcpy (pack_ver,packages[actions_counter].cur_version);
 			pac_flag=1;
@@ -194,4 +192,13 @@ char* IsPackageInArm(char *package, char *version, struct arm_packs arm_packages
 	}
 	if (arm_flag==1) return arm_packages[i-1].full_path; 
 	else return NULL;
+}
+/////////////////////////////////////////
+int IsPackageInstalled(char *package, long int actions_counter, struct packs packages[]) {
+	for (;actions_counter>0;actions_counter--) {
+		if (!strcmp(package,packages[actions_counter].name) && !strcmp("installed",packages[actions_counter].action)) { // нашли версию
+				return 1;
+		}
+	}
+	return 0;
 }

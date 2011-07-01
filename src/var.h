@@ -9,6 +9,7 @@ char* IsPackageInArm(char*, char*, struct arm_packs arm_packages[]);
 void ShowStartWindow(long int, struct packs packages[]) ;
 int ShowHelpWindow();
 int ReadArm(char*, struct arm_packs arm_packages[]);
+int IsPackageInstalled(char*, long int, struct packs packages[]);
 char *get_ip(char *host);
 char *build_get_query(char *host, char *page);
 
