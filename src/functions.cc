@@ -8,6 +8,7 @@
 
 pmdb_t *db_local;
 pmpkg_t *pkg;
+char *dbpath = NULL;
 
 long int ReadPacmanLog(struct packs packages[], FILE  *pFile2) {
 
@@ -56,13 +57,13 @@ int DowngradeToDate (char *date) {
 }
 /////////////////////////////////////////////
 int DowngradeLastPackages (int pack_qty, long int actions_counter,  struct packs packages[]) {
-	int i=0;
+	int i=0, status;
 	printf ("Downgrade last %d packages\n", pack_qty);
 	for (;actions_counter>0;actions_counter--) {
 		if (!strcmp("upgraded",packages[actions_counter].action)) { // нашли нужный пакет для апргрейда
 			if (strcmp(packages[actions_counter].cur_version, packages[actions_counter].prev_version)) { // если был апгрейд на другую версию, то ищем дальше
-					SilentDowngradePackage(packages[actions_counter].name, actions_counter, &packages[0]);
-					pack_qty--;
+					status = SilentDowngradePackage(packages[actions_counter].name, actions_counter, &packages[0]);
+					if (status!=-1) pack_qty--;
 					if (pack_qty==0) break;
 				i++;
 			}
@@ -76,13 +77,11 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 	long int actions = actions_counter;
 	int pac_flag=0;
 	FILE *pFile;
-
-	struct arm_packs  *arm_packages = (struct arm_packs *)malloc(sizeof(struct arm_packs)*1000);
+	struct arm_packs  *arm_packages = (struct arm_packs *)malloc(sizeof(struct arm_packs)*actions_counter);
 	
 	if(sizeof(void*) == 4) architecture = (char *)"i686";
 	else if (sizeof(void*) == 8) architecture = (char *)"x86_64";
 
-	
 	printf("\n \033[1;%dm --> Downgrade package %s \033[0m", 31, pack_name);
 
 	int aur_result, res;
@@ -101,10 +100,10 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 							   system(buf);
 							   return 0;
 				}
-				else { free (line); return 1; }
+				else { free (line); return 0; }
 			}
 		}
-		else { printf("\nSorry, package '%s', isn`t installed. Terminating", pack_name); return 1; }
+		else { printf("\nSorry, package '%s', isn`t installed. Terminating", pack_name); return -1; }
 	} // В Аур пакета нет
 
 	strcpy (full_pack_name,pack_name);
@@ -137,19 +136,19 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 						strcat(syztem,full_path_to_packet);
 						system(syztem);
 						fclose(pFile);
-						return 1;
+						return 0;
 					}
 
-	if (!pac_flag) { printf ("\nNo information in logs about this package. Terminating\n"); return 0; }
+	if (!pac_flag) { printf ("\nNo information in logs about this package. Terminating\n"); return -1; }
 	int arm_flag = ReadArm(pack_name, &arm_packages[0]);
-	if (arm_flag==1) { printf ("\nSorry, noone source have not information about this package. Terminating\n"); return 1; }
+	if (arm_flag==1) { printf ("\nSorry, noone source have not information about this package. Terminating\n"); return 0; }
 	char* arm = IsPackageInArm(pack_name, pack_ver, &arm_packages[0]);
 	if (arm) {
 			printf("Downgrade %s from ARM\n", pack_name);
 			strcpy(syztem,"sudo pacman -U "); // установка
 			strcat(syztem,arm);
 			system(syztem);
-			return 1;
+			return 0;
 	}
 	return 0;
 }
@@ -205,12 +204,7 @@ int IsPackageInstalled(char *package) {
 /////////////////////////////////////////
 int alpm_local_init(void) {
 	int ret;
-	char *dbpath = NULL;
-	
-	
 	ret = alpm_initialize();
-	if(ret != 0) return(ret);
-	ret = alpm_option_set_root("/root");
 	if(ret != 0) return(ret);
 	if(dbpath) ret = alpm_option_set_dbpath(dbpath);
 	else ret = alpm_option_set_dbpath("/var/lib/pacman");
@@ -218,4 +212,9 @@ int alpm_local_init(void) {
 	db_local = alpm_option_get_localdb();
 	if(!db_local) return(1);
 	return(0);
+}
+/////////////////////////////////////////
+int alpm_local_free() {
+	if(dbpath) free(dbpath);
+	alpm_release();
 }

@@ -3,17 +3,18 @@
 #include <stdlib.h>
 #include <var.h>
 
+#define PACKAGE    "downgrader"
+#define VERSION    "0.16"
+
 //////////////////////////////////////////////
 void ShowStartWindow(long int actions_counter, struct packs packages[]) {
 	int op_number, p_qty;
 	char p_name[30];
 	
-//	system("clear");
 	printf("Welcome to package downgrader. \nThis programm helps you to downgrade some packages, and resolve system unstability problems\n\n");	
 	printf("Please select necessary operation:\n");
 	printf("1. Downgrade 1 package\n");	
 	printf("2. Downgrade some last packages\n");
-	//printf("3. Downgrade all packages to date (restore packages situation to necessary date)\n\n");
 	printf("Enter operation number: ");
 	scanf ("%d",&op_number);
 
@@ -31,6 +32,10 @@ void ShowStartWindow(long int actions_counter, struct packs packages[]) {
 }
 ///////////////////////////////////////////
 int ShowHelpWindow() {
-	printf ("Downgrader. ver 0.1\n Usage:\n -l N = Downgrade N packages\n -p NAME = Downgrade package NAME\n\n");
-	
+ printf("\n%s, version %s\n", PACKAGE, VERSION); 
+ printf("USAGE:\n");
+ printf("%s [-h] [-l packages q-ty]\n\n", PACKAGE);
+
+ printf("  -h     print this help and exit\n");
+ printf("  -l N   downgrade N last packages\n\n");
 }

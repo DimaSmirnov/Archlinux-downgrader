@@ -17,7 +17,7 @@ int IsPackageInstalled(char*);
 char *get_ip(char *host);
 char *build_get_query(char *host, char *page);
 int alpm_local_init(void);
-
+int alpm_local_free(void);
 
 struct  packs{ // -- Действия с пакетами из логов пакмана
       	char name[40]; // название пакета

@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <var.h>
-////
+
 /////////////////////////////////////////////////////
 int IsPackageInAur(char* package) {
 
