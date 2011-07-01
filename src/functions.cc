@@ -6,6 +6,9 @@
 #include <alpm.h>
 #include <alpm_list.h>
 
+pmdb_t *db_local;
+pmpkg_t *pkg;
+
 long int ReadPacmanLog(struct packs packages[], FILE  *pFile2) {
 
 int action_counter=0;
@@ -87,7 +90,7 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 	size_t len = 0;
 	aur_result = IsPackageInAur (pack_name); // Первым проверяем аур, пакет в нем  ?
 	if (aur_result) {
-		pac_flag = IsPackageInstalled(pack_name, actions, &packages[0]);
+		pac_flag = IsPackageInstalled(pack_name);
 		if (pac_flag) {
 			printf("\nPackage '%s' is in AUR, downgrade cancelled \ndelete this package from system ? [y/n] ", pack_name);
 			while (getline (&line, &len, stdin) >= 0) {
@@ -108,7 +111,7 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 	strcat (full_pack_name,"-");
 
 	for (;actions_counter>0;actions_counter--) {
-		pac_flag = IsPackageInstalled(pack_name, actions, &packages[0]);
+		pac_flag = IsPackageInstalled(pack_name);
 		if (!strcmp(pack_name,packages[actions_counter].name) && !strcmp("upgraded",packages[actions_counter].action)) { // нашли нужный пакет для апгрейда
 			strcpy (pack_ver,packages[actions_counter].cur_version);
 			pac_flag=1;
@@ -194,11 +197,25 @@ char* IsPackageInArm(char *package, char *version, struct arm_packs arm_packages
 	else return NULL;
 }
 /////////////////////////////////////////
-int IsPackageInstalled(char *package, long int actions_counter, struct packs packages[]) {
-	for (;actions_counter>0;actions_counter--) {
-		if (!strcmp(package,packages[actions_counter].name) && !strcmp("installed",packages[actions_counter].action)) { // нашли версию
-				return 1;
-		}
-	}
-	return 0;
+int IsPackageInstalled(char *package) {
+	pkg = alpm_find_satisfier(alpm_db_get_pkgcache(db_local), package);
+	if(!pkg) return 0;// пакет не найден в системе
+	return 1;
+}
+/////////////////////////////////////////
+int alpm_local_init(void) {
+	int ret;
+	char *dbpath = NULL;
+	
+	
+	ret = alpm_initialize();
+	if(ret != 0) return(ret);
+	ret = alpm_option_set_root("/root");
+	if(ret != 0) return(ret);
+	if(dbpath) ret = alpm_option_set_dbpath(dbpath);
+	else ret = alpm_option_set_dbpath("/var/lib/pacman");
+	if(ret != 0) return(ret);
+	db_local = alpm_option_get_localdb();
+	if(!db_local) return(1);
+	return(0);
 }

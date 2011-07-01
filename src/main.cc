@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <alpm.h>
+#include <alpm_list.h>
 #include <var.h>
-
 
 int main(int argc, char **argv)  
 {
 		FILE *pFile;
-		int start_flag=2;
+		int start_flag=2, ret;
 	
 		pFile=fopen("/var/log/pacman.log","r");
 		long int actions_counter = GetPacmanSize(pFile); // узнаем нужный размер структуры и выделяем память для базы
@@ -17,7 +18,9 @@ int main(int argc, char **argv)
 		rewind(pFile);
         actions_counter = ReadPacmanLog(&packages[0], pFile);
         fclose(pFile);
-
+	
+		ret = alpm_local_init();
+	
 		if (argc>1) {
 			if(!strcmp(argv[1], "-h")) start_flag=6;
 			else if(!strcmp(argv[1], "-l")) start_flag=3;

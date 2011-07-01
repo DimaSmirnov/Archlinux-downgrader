@@ -1,3 +1,7 @@
+#include <alpm.h>
+#include <alpm_list.h>
+
+
 long int ReadPacmanLog(struct packs packages[], FILE*);
 long int GetPacmanSize(FILE*);
 int DowngradeToDate(char*);
@@ -9,10 +13,10 @@ char* IsPackageInArm(char*, char*, struct arm_packs arm_packages[]);
 void ShowStartWindow(long int, struct packs packages[]) ;
 int ShowHelpWindow();
 int ReadArm(char*, struct arm_packs arm_packages[]);
-int IsPackageInstalled(char*, long int, struct packs packages[]);
+int IsPackageInstalled(char*);
 char *get_ip(char *host);
 char *build_get_query(char *host, char *page);
-
+int alpm_local_init(void);
 
 
 struct  packs{ // -- Действия с пакетами из логов пакмана
