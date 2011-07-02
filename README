@@ -1,3 +1,11 @@
-Powerfull program for Archlinux distribution, powered with libalpm
+Powerful program for Archlinux distribution, powered with libalpm
 Helps to downgrade packages, if last installed version is unstabe.
 Works with AUR, ARM and pacman log`s
+
+
+--- LICENSE ---
+
+GNU General Public License
+Please see LICENSE file
+
+-------------
