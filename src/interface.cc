@@ -33,9 +33,8 @@ void ShowStartWindow(long int actions_counter, struct packs packages[]) {
 ///////////////////////////////////////////
 int ShowHelpWindow() {
  printf("\n%s, version %s\n", PACKAGE, VERSION); 
- printf("USAGE:\n");
- printf("%s [-h] [-l packages q-ty]\n\n", PACKAGE);
-
- printf("  -h     print this help and exit\n");
- printf("  -l N   downgrade N last packages\n\n");
+ printf(" usage: %s [ -h ] [ -l <packages q-ty> ] <PACKAGE_NAME>\n", PACKAGE);
+ printf("  options:\n");
+ printf("   -h   <print this help and exit>\n");
+ printf("   -l N <downgrade N last packages>\n\n");
 }

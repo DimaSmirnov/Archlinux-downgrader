@@ -15,39 +15,36 @@ long int ReadPacmanLog(struct packs packages[], FILE  *pFile2) {
 int action_counter=0;
 char string[251];
 char *p, *chop, *date, *time, *operat, *pack_name, *cur_version, *prev_version;
-
-        while (!feof(pFile2)) {  // Читаем историю апгрейдов из логов
-				
-                chop = fgets(string,250,pFile2); if (!chop) break;
-				date = strtok(string," ");
-				date++;
-				time = strtok(NULL,"] ");
-				operat = strtok(NULL," ");
-				pack_name = strtok(NULL," ");
-
-				if (!strcmp(operat,"upgraded")) {
-								prev_version = strtok(NULL," ");
-								prev_version++;
-								cur_version = strtok(NULL," ");
-								cur_version = strtok(NULL,")");				
-								strcpy(packages[action_counter].date,date);
-								strcpy(packages[action_counter].time,time);
-								strcpy(packages[action_counter].name,pack_name);
-								strcpy(packages[action_counter].action,operat);
-								strcpy(packages[action_counter].cur_version,cur_version);
-								strcpy(packages[action_counter].prev_version,prev_version);
-								action_counter++;
-				}
-				if (!strcmp(operat,"installed")) {
-								cur_version = strtok(NULL,")");
-								cur_version++;				
-								strcpy(packages[action_counter].date,date);
-								strcpy(packages[action_counter].time,time);
-								strcpy(packages[action_counter].name,pack_name);
-								strcpy(packages[action_counter].action,operat);
-								strcpy(packages[action_counter].cur_version,cur_version);
-								action_counter++;
-				}
+        while (!feof(pFile2)) {
+			chop = fgets(string,250,pFile2); if (!chop) break;
+			date = strtok(string," ");
+			date++;
+			time = strtok(NULL,"] ");
+			operat = strtok(NULL," ");
+			pack_name = strtok(NULL," ");
+			if (!strcmp(operat,"upgraded")) {
+				prev_version = strtok(NULL," ");
+				prev_version++;
+				cur_version = strtok(NULL," ");
+				cur_version = strtok(NULL,")");				
+				strcpy(packages[action_counter].date,date);
+				strcpy(packages[action_counter].time,time);
+				strcpy(packages[action_counter].name,pack_name);
+				strcpy(packages[action_counter].action,operat);
+				strcpy(packages[action_counter].cur_version,cur_version);
+				strcpy(packages[action_counter].prev_version,prev_version);
+				action_counter++;
+			}
+			if (!strcmp(operat,"installed")) {
+				cur_version = strtok(NULL,")");
+				cur_version++;				
+				strcpy(packages[action_counter].date,date);
+				strcpy(packages[action_counter].time,time);
+				strcpy(packages[action_counter].name,pack_name);
+				strcpy(packages[action_counter].action,operat);
+				strcpy(packages[action_counter].cur_version,cur_version);
+				action_counter++;
+			}
        }
    return action_counter;
 }
@@ -148,9 +145,9 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 						return 0;
 					}
 
-	if (!pac_flag) { printf ("\nNo information in logs about this package. Terminating\n"); return -1; }
+	if (!pac_flag) { printf ("\nNo information about this package. Terminating\n"); return -1; }
 	int arm_flag = ReadArm(pack_name, &arm_packages[0]);
-	if (arm_flag==1) { printf ("\nSorry, noone source have not information about this package. Terminating\n"); return 0; }
+	if (arm_flag==1) { printf ("\nSorry, noone source haven`t information about this package. Terminating\n"); return 0; }
 	char* arm = IsPackageInArm(pack_name, pack_ver, &arm_packages[0]);
 	if (arm) {
 			printf("Downgrade %s from ARM\n", pack_name);
