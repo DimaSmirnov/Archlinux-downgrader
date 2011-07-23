@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <var.h>
-//#include <locale.h>
 #include <alpm.h>
 #include <alpm_list.h>
 
@@ -137,7 +136,7 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 					printf("\033[1;%dm(%s) \033[0m  \n", 31, pack_ver);	
 					pFile=fopen(full_path_to_packet,"r");
 					if (pFile) {  // предыдущая версия пакета существует в локалке, кайф!
-						printf("Downgrade %s from cache\n", full_pack_name);
+						printf("Downgrade to %s from cache\n", full_pack_name);
 						strcpy(syztem,"sudo pacman -U "); // установка
 						strcat(syztem,full_path_to_packet);
 						system(syztem);

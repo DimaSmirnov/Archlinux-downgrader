@@ -4,7 +4,7 @@
 #include <var.h>
 
 #define PACKAGE    "downgrader"
-#define VERSION    "0.16"
+#define VERSION    "0.18"
 
 //////////////////////////////////////////////
 void ShowStartWindow(long int actions_counter, struct packs packages[]) {

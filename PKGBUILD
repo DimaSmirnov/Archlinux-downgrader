@@ -1,12 +1,12 @@
 # Developer: Dmitrij Smirnov <other@igus.lv>
 
 pkgname=downgrader
-pkgver=0.16
+pkgver=0.18
 pkgrel=1
 pkgdesc="Packages downgrader for Archlinux, powered by libalpm. Works with AUR, ARM and pacman logs"
 arch=(i686 x86_64)
 depends=('git' 'pacman')
-license=("GPL")
+license=("GPL3")
 url="https://github.com/DimaSmirnov/Archlinux-downgrader"
 _gitroot="git://github.com/DimaSmirnov/Archlinux-downgrader.git"
 _gitname="Archlinux-downgrader"

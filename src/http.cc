@@ -75,7 +75,7 @@ int IsPackageInAur(char* package) {
 		char* pch = strstr(string,full_pack_name); 
 		if (pch) return 1; // пакет находится в aur
 	}
-  	return 0;
+  	return 0; // пакета нет в аур
 }
 ///////////////////////////////////////////////////////
 char *get_ip(char *host) {
@@ -111,10 +111,10 @@ int ReadArm(char* package, struct arm_packs arm_packages[]) {
   struct sockaddr_in *remote;
   int sock, tmpres, port=80;
   char arch1[80], *architecture,  *ip, *get, buf[BUFSIZ+1];
-  char host[40], page[80];//, ARMbuffer[3000];
+  char host[40], page[80];
 	
-	if(sizeof(void*) == 4) { architecture = (char *)"32";  }//strcpy(arch1,"i686") ; }
-	else if (sizeof(void*) == 8) { architecture = (char *)"64"; }//strcpy(arch1,"x86_64"); }
+	if(sizeof(void*) == 4) { architecture = (char *)"32";  }
+	else if (sizeof(void*) == 8) { architecture = (char *)"64"; }
 	
 	strcpy(host,"arm.konnichi.com");
 	strcpy(page,"search/raw.php?a=");
@@ -206,4 +206,3 @@ else {
 }
 return 0;
 }
-
