@@ -14,7 +14,7 @@ void ShowStartWindow(long int, struct packs packages[]) ;
 int ShowHelpWindow();
 int ReadArm(char*, struct arm_packs arm_packages[]);
 int IsPackageInstalled(char*);
-char *get_ip(char *host);
+char *get_ip(int);
 char *build_get_query(char *host, char *page);
 int alpm_local_init(void);
 int alpm_local_free(void);

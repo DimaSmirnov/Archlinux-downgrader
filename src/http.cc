@@ -25,7 +25,7 @@ int IsPackageInAur(char* package) {
     exit(1);
   }
 
-  ip = get_ip(host);
+  ip = get_ip(2);
   remote = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in *));
   remote->sin_family = AF_INET;
   tmpres = inet_pton(AF_INET, ip, (void *)(&(remote->sin_addr.s_addr)));
@@ -78,20 +78,14 @@ int IsPackageInAur(char* package) {
   	return 0; // пакета нет в аур
 }
 ///////////////////////////////////////////////////////
-char *get_ip(char *host) {
-  struct hostent *hent;
-  int iplen = 15; //XXX.XXX.XXX.XXX
-  char *ip = (char *)malloc(iplen+1);
-  memset(ip, 0, iplen+1);
-  if((hent = gethostbyname(host)) == NULL) {
-    herror("Can't get IP address. Please check your DNS settings");
-    exit(1);
-  }
-  if(inet_ntop(AF_INET, (void *)hent->h_addr_list[0], ip, iplen) == NULL) {
-    perror("Can't resolve host");
-    exit(1);
-  }
-  return ip;
+char *get_ip(int i) {
+   int iplen = 15; //XXX.XXX.XXX.XXX
+    char *ip = (char *)malloc(iplen+1);
+    memset(ip, 0, iplen+1);
+    if (i==1) strcpy (ip,"173.236.246.175"); // ARM
+	if (i==2) strcpy (ip,"208.92.232.29"); // Aur
+	
+    return ip;
 }
 
 char *build_get_query(char *host, char *page) {
@@ -127,10 +121,12 @@ int ReadArm(char* package, struct arm_packs arm_packages[]) {
     perror("Can't create TCP socket. Internal error 1");
     exit(1);
   }
-  ip = get_ip(host);
+  ip = get_ip(1);
+  //strcpy (ip,"173.236.246.175");
   remote = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in *));
   remote->sin_family = AF_INET;
   tmpres = inet_pton(AF_INET, ip, (void *)(&(remote->sin_addr.s_addr)));
+	
   if( tmpres < 0) {
     perror("Can't set remote->sin_addr.s_addr. Internal error 2");
     exit(1);

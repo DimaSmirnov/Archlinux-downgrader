@@ -2,10 +2,10 @@
 
 pkgname=downgrader
 pkgver=0.18
-pkgrel=1
+pkgrel=2
 pkgdesc="Packages downgrader for Archlinux, powered by libalpm. Works with AUR, ARM and pacman logs"
 arch=(i686 x86_64)
-depends=('git' 'pacman')
+depends=('git' 'pacman' 'intltool')
 license=("GPL3")
 url="https://github.com/DimaSmirnov/Archlinux-downgrader"
 _gitroot="git://github.com/DimaSmirnov/Archlinux-downgrader.git"
