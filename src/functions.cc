@@ -97,8 +97,7 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 		pac_flag = IsPackageInstalled(pack_name);
 		if (pac_flag) {
 			printf("\nPackage '%s' is in AUR, downgrade cancelled", pack_name);
-			return 0;
-			
+			return 0;  
 		}
 		else { printf("\nSorry, package '%s', isn`t installed. Terminating", pack_name); return -1; }
 	} // В Аур пакета нет
