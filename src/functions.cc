@@ -96,17 +96,9 @@ int SilentDowngradePackage (char* pack_name, long int actions_counter, struct pa
 	if (aur_result) {
 		pac_flag = IsPackageInstalled(pack_name);
 		if (pac_flag) {
-			printf("\nPackage '%s' is in AUR, downgrade cancelled \ndelete this package from system ? [y/n] ", pack_name);
-			while (getline (&line, &len, stdin) >= 0) {
-				res = rpmatch (line);
-				if (res > 0) {
-							   char buf[50];
-							   sprintf(buf,"sudo pacman -R %s\n", pack_name);
-							   system(buf);
-							   return 0;
-				}
-				else { free (line); return 0; }
-			}
+			printf("\nPackage '%s' is in AUR, downgrade cancelled", pack_name);
+			return 0;
+			
 		}
 		else { printf("\nSorry, package '%s', isn`t installed. Terminating", pack_name); return -1; }
 	} // В Аур пакета нет
