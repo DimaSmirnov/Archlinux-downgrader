@@ -1,5 +1,5 @@
 downgrader: main.o
 	g++ main.o -lalpm  -o downgrader
 
-main.o: functions.cc http.cc interface.cc main.cc var.h
+main.o: main.cc class_Interface.h class_Actions.h
 	g++ -g -c main.cc -o main.o
