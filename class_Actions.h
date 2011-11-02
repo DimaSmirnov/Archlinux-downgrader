@@ -147,7 +147,7 @@ int Actions::IsPackageInAur(char *package) {
 	char ip[20], tmp[4], full_pack_name[30];
 	char buf[BUFSIZ], host[50], tpl[100], *query, page[80];
 	char useragent[]="HTMLGET 1.0";
-	char htmlcontent[100000];
+	char htmlcontent[15000];
 	char *getpage = page;
 	
 	strcpy (ip,"208.92.232.29"); // Aur
@@ -167,10 +167,11 @@ int Actions::IsPackageInAur(char *package) {
 	getpage=query;
   	memset(buf, 0, sizeof(buf));
     tmpint = send(sock, query, strlen(query), 0);
-	while((tmpint = recv(sock, buf, sizeof(buf), 0)) > 0){
+	//while((tmpint = recv(sock, buf, sizeof(buf), 0)) > 0){
+		tmpint = recv(sock, buf, sizeof(buf), 0); // Принимаем первую часть ответа сервера, ее достаточно, чтобы понять есть ли пакет или нет
 		strcat(htmlcontent,buf);	
-	}
-	//printf("%d :: %d\n",sizeof(htmlcontent), sizeof(buf));
+	//}
+	//printf("%d :: %d\n",sizeof(htmlcontent), sizeof(buf)); //DEBUG
   free(query);
   free(remote);
   close(sock);
@@ -207,14 +208,14 @@ void Actions::ReadPacmanLog() {
 	int i=0;
         while (!feof(pFile)) { // Parsing file pacman.log for upgrades history on this machine
 			chop = fgets(string,650,pFile); if (!chop) break;
-			// DEBUG: printf("Line: %d\n",i+1);
+			//printf("Line: %d\n",i+1); // DEBUG: 
 			date = strtok(string," ");
 			date++;
 			time = strtok(NULL,"] ");
 			operat = strtok(NULL," ");
 			pack_name = strtok(NULL," ");
 			if (!strcmp(operat,"upgraded")) {
-				//DEBUG: printf("Upgraded: %s, line: %d\n", pack_name, i+1);
+				//printf("Upgraded: %s, line: %d\n", pack_name, i+1); //DEBUG: 
 				prev_version = strtok(NULL," ");
 				prev_version++;
 				cur_version = strtok(NULL," ");
