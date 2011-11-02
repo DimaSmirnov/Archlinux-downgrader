@@ -194,7 +194,7 @@ int Actions::IsPackageInAur(char *package) {
 void Actions::ReadPacmanLog() {
 	
 	action_counter=0;
-	char string[250];
+	char string[650];
 	char *p, *chop, *date, *time, *operat, *pack_name, *cur_version, *prev_version;
 	pFile=fopen("/var/log/pacman.log","r");
 	while (!feof(pFile)) {  // Count lines q-ty in pacman.log
@@ -204,14 +204,17 @@ void Actions::ReadPacmanLog() {
 	rewind (pFile);
 	packages = new packs[action_counter];
 	action_counter=0;
+	int i=0;
         while (!feof(pFile)) { // Parsing file pacman.log for upgrades history on this machine
-			chop = fgets(string,250,pFile); if (!chop) break;
+			chop = fgets(string,650,pFile); if (!chop) break;
+			// DEBUG: printf("Line: %d\n",i+1);
 			date = strtok(string," ");
 			date++;
 			time = strtok(NULL,"] ");
 			operat = strtok(NULL," ");
 			pack_name = strtok(NULL," ");
 			if (!strcmp(operat,"upgraded")) {
+				//DEBUG: printf("Upgraded: %s, line: %d\n", pack_name, i+1);
 				prev_version = strtok(NULL," ");
 				prev_version++;
 				cur_version = strtok(NULL," ");
@@ -224,6 +227,7 @@ void Actions::ReadPacmanLog() {
 				strcpy(packages[action_counter].prev_version,prev_version);
 				action_counter++;
 			}
+			i++;
       }
    fclose(pFile);
    pacmanlog_length = action_counter;
