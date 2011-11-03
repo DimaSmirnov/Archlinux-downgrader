@@ -26,13 +26,13 @@ class Actions {
 			char date[10]; // дата операции
 			char time[20]; // время операции
 			char action[20]; // название операции (upgraded, installed, removed)
-			char cur_version[20]; // предыдущая версия
-			char prev_version[20]; // предыдущая версия
+			char cur_version[50]; // предыдущая версия
+			char prev_version[50]; // предыдущая версия
 	}; packs  *packages;
 	struct  arm_packs{ // -- Структура список пакетов в ARM
-		char full_path[100]; // полный адрес до пакета
+		char full_path[300]; // полный адрес до пакета
 		char repository[30]; // Repositroy of package
-		char version[20]; // Version of package
+		char version[50]; // Version of package
 		char name[50]; // Name of package
 	}; arm_packs  *arm_packages;
 	int package_never_upgraded;
@@ -284,6 +284,7 @@ int Actions::ReadArm(char *package) {
 	str = strtok(htmlcontent, "\n");	
 	if (strstr(str,"http://")) { 
 		strcpy(arm_packages[i].full_path,str);
+		//printf("%s\n",arm_packages[i].full_path); // DEBUG
 		i++;
 	}
 	while(str = strtok(NULL, "\n")) {
@@ -291,31 +292,52 @@ int Actions::ReadArm(char *package) {
 		last = &str[strlen(str)-3];
 		if (strcmp(last,"sig") && strstr(str,"http://")) { 
 			strcpy(arm_packages[i].full_path,str);
+			//printf("%s\n",arm_packages[i].full_path); // DEBUG
 			i++;
 		}
 	}
 // Get info about packages in ARM: version, package name
 	for (int l=0;strlen(arm_packages[l].full_path)>0;l++) {
-	char full[50];
+	char full[500];
 	char *fully = full;
+	char release[10];
+	char version[20];
+	
 	strcpy(full,arm_packages[l].full_path);
 	fully = ReverseString(full);
-	str = strtok(full, "-");
-	char release[10];
-	strcpy(release,strtok(NULL, "-")); // release
-	char version[50];
-	strcpy(version,strtok(NULL, "-")); // version
-	strcat(release,"-");
-	strcat(version,release);
-	strcpy(release,version);
-	fully = ReverseString(release);
-	//printf("%s\n",release);
-	strcpy(arm_packages[l].version,fully); // Copy version of package
-	strcpy(version,strtok(NULL, "/"));
-	fully = ReverseString(version);
-	//printf("%s\n",version);
-	strcpy(arm_packages[l].name,fully); // Copy name of package
-
+	str = strtok(full, ".");
+	str = strtok(NULL, ".");
+	str = strtok(NULL, ".");
+	str = strtok(NULL, "-");
+	if (strstr(str,"46_68x") || strstr(str,"686i")) { // For stupid packages in ARM :(
+		strcpy(release,strtok(NULL, "-")); // release
+		strcpy(version,strtok(NULL, "-")); // version
+		strcat(release,"-");
+		strcat(version,release);
+		strcpy(release,version);
+		//printf("%s\n",release); // DEBUG
+		fully = ReverseString(release);
+		//printf("%s\n",fully); // DEBUG
+		strcpy(arm_packages[l].version,fully); // Copy version of package
+		//printf("%s\n",version); // DEBUG
+		strcpy(version,strtok(NULL, "/"));
+		fully = ReverseString(version);
+		//printf("1: %s\n",fully); // DEBUG
+		strcpy(arm_packages[l].name,fully); // Copy name of package
+	}
+	else {
+		strcpy(release,str); // release
+		strcpy(version,strtok(NULL, "-")); // version
+		fully = ReverseString(version);
+		strcat(fully,"-");
+		strcat(fully,release);
+		//printf("%s\n",fully); // DEBUG
+		strcpy(arm_packages[l].version,fully); // Copy version of package
+		strcpy(version,strtok(NULL, "/"));
+		fully = ReverseString(version);
+		//printf("2: %s\n",fully); // DEBUG
+		strcpy(arm_packages[l].name,fully); // Copy name of package				
+	}
 }
 return 0;
 }
@@ -326,7 +348,8 @@ char* Actions::IsPackageInArm(char *package, char *version) {
 	strcpy(temp_pack,package);
 	strcat(temp_pack,"-");
 	strcat(temp_pack,version);
-	for(tmpint=0;arm_packages[tmpint].full_path;tmpint++) {
+	for(tmpint=0;strlen(arm_packages[tmpint].full_path)>0;tmpint++) {
+		//printf("%s\n",arm_packages[tmpint].full_path); // DEBUG
 		if (strstr(arm_packages[tmpint].full_path,temp_pack)) {
 			arm_flag=1;
 			break;
