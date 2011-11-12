@@ -1,8 +1,8 @@
-# Author: Dmitrij Smirnov <other@igus.lv>
+# Author: Dmitriy Smirnov <other@igus.lv>
 pkgname=downgrader
 pkgver=1.1.2
 pkgrel=1
-pkgdesc="Packages downgrader for Archlinux, powered by libalpm. Works with AUR, ARM and pacman logs"
+pkgdesc="Powerful packages downgrader for Archlinux, powered by libalpm. Works with AUR, ARM and pacman logs"
 arch=('any')
 depends=('git' 'pacman' 'intltool')
 license=("GPL")
