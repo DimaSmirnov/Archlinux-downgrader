@@ -5,12 +5,15 @@ class Actions {
 	int IsPackageInstalled(char *);
 	int IsPackageInCache(char *);
 	int IsPackageInAur(char *);
+	int CheckDowngradePossibility(char *);
 	int IsPackageInArm();
 	void ReadPacmanLog();
 	int ReadArm(char *);
 	char* IsPackageInArm(char *, char *);
 	char* ReverseString(char *);
-	int DowngradePackage(char *, int);
+	int DowngradePackage(char *);
+	int GetChoiseFromArm(char *);
+	
 	pmdb_t *db_local;
 	alpm_list_t *i;
 	alpm_list_t *dbnames;
@@ -31,38 +34,26 @@ class Actions {
 	}; packs  *packages;
 	struct  arm_packs{ // -- Структура список пакетов в ARM
 		char full_path[300]; // полный адрес до пакета
-		char repository[30]; // Repositroy of package
+		//char repository[30]; // Repositroy of package
 		char version[50]; // Version of package
 		char name[50]; // Name of package
 	}; arm_packs  *arm_packages;
 	int package_never_upgraded;
 	int action_counter;
-	int tmpint, debug;
+	int packages_in_arm;
+	int tmpint, debug, show_list, quiet_downgrade;
+	char package_number[2];
+	//char *pac_number = package_number;
+	int def_pac;
+	
 };
 //////////////////////////////////////////////////
-int Actions::DowngradePackage(char *package, int quiet_downgrade) {
+int Actions::DowngradePackage(char *package) {
 	tmpchar=NULL;
-		if (!quiet_downgrade) printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
-
-	    int isinstalled = Actions::IsPackageInstalled(package);
-	    if (isinstalled) {
-			if (!quiet_downgrade) printf("Installed version: %s\n",installed_pac_ver);
-		}
-		else {
-			if(!quiet_downgrade) printf("Package %s not installed. Terminating\n", package); 
-			return 1;			
-		}
-		
-	    int isinaur = Actions::IsPackageInAur(package);
-	    if (isinaur) { 
-			if(!quiet_downgrade) printf("Package in AUR. Downgrade impossible. Terminating\n"); 
-			return 1; 
-		}
-		
 	    int isincache = Actions::IsPackageInCache(package); // Here also parsing pacman.log and using flag actions.package_never_upgraded
 	    if (isincache) {
 			if (!quiet_downgrade) printf("Downgrading from Cache, to version %s\n",install_version);
-			system(install_command); // Organize a downgrading from cache
+			system(install_command); // Start downgrading from cache
 			return 0;
 		}
 		else { // ELSE Organize checking in  ARM
@@ -77,9 +68,35 @@ int Actions::DowngradePackage(char *package, int quiet_downgrade) {
 			free (arm_packages);
 		}
 		if (package_never_upgraded==1) printf ("Package %s never upgraded.You can try to remove this package.\n",package); //Package never upgrades, but installed
-		else if (!isinstalled) printf ("Package %s not installed.Terminating.\n", package);
 		else printf("Package %s not found in AUR, local cache or ARM. Terminating\n", package);
 		return 1;
+}
+//////////////////////////////////////////////////
+int Actions::GetChoiseFromArm(char *package) {
+
+		int pac_num;
+		int ispacmaninit = Actions::PacmanInit();
+	    if (ispacmaninit) { 
+			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
+			return 1;
+		}
+		int ret = Actions::CheckDowngradePossibility(package);
+		Actions::ReadPacmanLog();
+		ret = Actions::ReadArm(package);
+		ret = Actions::IsPackageInCache(package);
+		if (!quiet_downgrade) {
+			printf ("\033[1;%dm Downgrade package: %s \033[0m \n\n", 31, package);
+		}
+		for (int i=0;i<Actions::packages_in_arm;i++) {
+			printf("%d: %s-%s", i+1, Actions::arm_packages[i].name,Actions::arm_packages[i].version);
+			if (!strcmp(Actions::arm_packages[i].version,Actions::installed_pac_ver)) printf(" [installed]\n");
+			if (!strcmp(Actions::arm_packages[i].version,Actions::install_version)) { printf(" [will be installed by default]\n"); Actions::def_pac=i+1; }
+			else printf("\n");
+		}
+		printf ("Please enter package number, [q] to quit, [d] to install default package: ");
+		scanf ("%s",Actions::package_number);
+
+		return 0;
 }
 //////////////////////////////////////////////////
 int Actions::IsPackageInstalled(char *package) {
@@ -118,7 +135,6 @@ int Actions::IsPackageInCache(char *package) {
 			}
 		}
 	}
-	//printf("\033[1;%dm(%s) \033[0m  \n", 31, packages[pacmanlog_length].prev_version);
 	strcpy(install_version,packages[pacmanlog_length].prev_version);
 	pFile=fopen(full_path_to_packet,"r");
 	pFile2=fopen(full_path_to_packet2,"r");
@@ -237,10 +253,10 @@ void Actions::ReadPacmanLog() {
 int Actions::ReadArm(char *package) {
   struct sockaddr_in *remote;
   int sock, port=80;
-  char *architecture,  ip[20], buf[10000];
+  char *architecture,  ip[20], buf[100000];
   char host[50], *query, page[80], tpl[100];
   char useragent[]="HTMLGET 1.0";
-  char  htmlcontent[10000], *str, *last;
+  char  htmlcontent[100000], *str, *last;
   char *getpage = page;
     
 	arm_packages = new arm_packs[action_counter];
@@ -251,7 +267,7 @@ int Actions::ReadArm(char *package) {
 	strcpy (ip,"173.236.246.175"); // ARM
 	strcpy(host,"arm.konnichi.com");
 	sprintf (page,"search/raw.php?a=%s&q=^%s%24&core=1&extra=1&community=1",architecture,package);
-	
+	//printf("%s",page); // DEBUG
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	
 	remote = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in *));
@@ -268,6 +284,7 @@ int Actions::ReadArm(char *package) {
     tmpint = send(sock, getpage, strlen(getpage), 0);
 
 	while((tmpint = recv(sock, buf, sizeof(buf), 0)) > 0){
+		//printf("%s",buf); // DEBUG
 		strcat(htmlcontent,buf);
 		for (int i=0;sizeof(buf)>i;i++) { //Clear buffer for new data 
 			buf[i]='\0';
@@ -279,6 +296,7 @@ int Actions::ReadArm(char *package) {
   close(sock);
 // Processing data from ARM
 	int i=0;
+	//printf("::: %d\n", strlen(htmlcontent)); //DEBUG
 	if (!strlen(htmlcontent)) return 1;
 
 	str = strtok(htmlcontent, "\n");	
@@ -297,8 +315,9 @@ int Actions::ReadArm(char *package) {
 		}
 	}
 // Get info about packages in ARM: version, package name
-	for (int l=0;strlen(arm_packages[l].full_path)>0;l++) {
-	char full[500];
+	int l=0;
+	for (l=0;strlen(arm_packages[l].full_path)>0;l++) {
+	char full[1000];
 	char *fully = full;
 	char release[10];
 	char version[20];
@@ -312,17 +331,13 @@ int Actions::ReadArm(char *package) {
 	if (strstr(str,"46_68x") || strstr(str,"686i")) { // For stupid packages in ARM :(
 		strcpy(release,strtok(NULL, "-")); // release
 		strcpy(version,strtok(NULL, "-")); // version
-		strcat(release,"-");
-		strcat(version,release);
-		strcpy(release,version);
-		//printf("%s\n",release); // DEBUG
-		fully = ReverseString(release);
-		//printf("%s\n",fully); // DEBUG
-		strcpy(arm_packages[l].version,fully); // Copy version of package
-		//printf("%s\n",version); // DEBUG
+		//strcpy(release,version); //printf("%s\n",release); // DEBUG
+		fully = ReverseString(version); //printf("%s\n",fully); // DEBUG
+		strcat(fully,"-");
+		strcat(fully,release);		
+		strcpy(arm_packages[l].version,fully); //printf("%s\n",version); // DEBUG// Copy version of package
 		strcpy(version,strtok(NULL, "/"));
-		fully = ReverseString(version);
-		//printf("1: %s\n",fully); // DEBUG
+		fully = ReverseString(version);//printf("1: %s\n",fully); // DEBUG
 		strcpy(arm_packages[l].name,fully); // Copy name of package
 	}
 	else {
@@ -330,15 +345,15 @@ int Actions::ReadArm(char *package) {
 		strcpy(version,strtok(NULL, "-")); // version
 		fully = ReverseString(version);
 		strcat(fully,"-");
-		strcat(fully,release);
-		//printf("%s\n",fully); // DEBUG
+		strcat(fully,release);//printf("%s\n",fully); // DEBUG
+		
 		strcpy(arm_packages[l].version,fully); // Copy version of package
 		strcpy(version,strtok(NULL, "/"));
-		fully = ReverseString(version);
-		//printf("2: %s\n",fully); // DEBUG
+		fully = ReverseString(version);//printf("2: %s\n",fully); // DEBUG	
 		strcpy(arm_packages[l].name,fully); // Copy name of package				
 	}
 }
+packages_in_arm = l;
 return 0;
 }
 ////////////////////////////////////////////////////////////////
@@ -367,6 +382,20 @@ char* Actions::ReverseString(char *string) {
         string[j]=t;
     }
     return string;
+}
+////////////////////////////////////////////////////////////////
+int Actions::CheckDowngradePossibility(char *package) {
+	int isinstalled = Actions::IsPackageInstalled(package);
+	if (!isinstalled) {
+		if(!quiet_downgrade) printf("Package '%s' not installed.\n", package); 
+		return 1;
+	}
+	int isinaur = Actions::IsPackageInAur(package);
+	if (isinaur) {
+		if(!quiet_downgrade) printf("Package '%s' in AUR. Downgrade impossible.\n", package);
+		return 1;
+	}
+return 0;
 }
 ////////////////////////////////////////////////////////////////
 int Actions::PacmanInit() {
