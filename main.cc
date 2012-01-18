@@ -18,8 +18,8 @@ int main(int argc, char **argv) {
 	int param, quiet_downgrade = 0, list_downgrade = 0, show_list = 0;
 
 
-	
-	
+
+
 	if (argc) package = argv[1];
 	while ((param = getopt (argc, argv, "q:hl:n:")) != -1)
 		switch (param) {
@@ -48,8 +48,8 @@ int main(int argc, char **argv) {
 	/////////////////////////////// Downgrade list of packages
 	if (list_downgrade) {
 		int ispacmaninit = actions.PacmanInit();
-	    if (ispacmaninit) { 
-			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n"); 
+	    if (ispacmaninit) {
+			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
 			return 1;
 		}
 		printf ("Downgrade %d last packages\n",list_downgrade);
@@ -74,14 +74,17 @@ int main(int argc, char **argv) {
 	else if (show_list) {
 		int def_pac = 0;
 		int pac_num;
+
+		printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
 		actions.show_list = show_list;
 		int ret = actions.GetChoiseFromArm(package);
-		if (ret) return 1;
+		if (ret) return 1; // Ошибка инициализации
 		if (!strcmp(actions.package_number,"d")) pac_num = actions.def_pac;
 		else if (!strcmp(actions.package_number,"q")) return 0;
 		else pac_num = atoi(actions.package_number);
 		strcpy(actions.install_command,"sudo pacman -U "); strcat(actions.install_command,actions.arm_packages[pac_num-1].full_path);
 		system(actions.install_command);
+		//printf ("%s\n", actions.install_command);
 		actions.PacmanDeinit();
 		return 0;
 	}
@@ -89,14 +92,15 @@ int main(int argc, char **argv) {
 	else if (package) {
 		actions.quiet_downgrade = quiet_downgrade;
 		int ispacmaninit = actions.PacmanInit();
-	    if (ispacmaninit) { 
-			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n"); 
+	    if (ispacmaninit) {
+			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
 			return 1;
 		}
+		printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
 		int ret = actions.CheckDowngradePossibility(package);
 		if (ret) return 1;
 		if (!quiet_downgrade) {
-			printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, actions.packages[actions.pacmanlog_length].name);
+//			printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, actions.packages[actions.pacmanlog_length].name);
 			printf ("Installed version: %s\n",actions.installed_pac_ver);
 		}
 		int result = actions.DowngradePackage(package);

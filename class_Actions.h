@@ -13,11 +13,10 @@ class Actions {
 	char* ReverseString(char *);
 	int DowngradePackage(char *);
 	int GetChoiseFromArm(char *);
-	
-	pmdb_t *db_local;
-	alpm_list_t *i;
-	alpm_list_t *dbnames;
-	pmpkg_t *pkg;
+
+	alpm_handle_t *alpm_handle;	
+	alpm_db_t *db_local;
+	alpm_pkg_t *pkg;
 	char *dbpath, *tmpchar;
 	char install_command[200]; // Клманда для установки
 	char install_version[30]; // Версия пакета для установки
@@ -50,6 +49,17 @@ class Actions {
 //////////////////////////////////////////////////
 int Actions::DowngradePackage(char *package) {
 	tmpchar=NULL;
+//		if (!quiet_downgrade) printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
+/*
+        int isinstalled = Actions::IsPackageInstalled(package);
+        if (isinstalled) {
+            if (!quiet_downgrade) printf("Installed version: %s\n",installed_pac_ver);
+        }
+        else {
+            if(!quiet_downgrade) printf("Package %s not installed. Terminating\n", package);
+            return 1;
+        }
+*/
 	    int isincache = Actions::IsPackageInCache(package); // Here also parsing pacman.log and using flag actions.package_never_upgraded
 	    if (isincache) {
 			if (!quiet_downgrade) printf("Downgrading from Cache, to version %s\n",install_version);
@@ -100,13 +110,16 @@ int Actions::GetChoiseFromArm(char *package) {
 }
 //////////////////////////////////////////////////
 int Actions::IsPackageInstalled(char *package) {
-	
-	pkg = alpm_find_satisfier(alpm_db_get_pkgcache(db_local), package);
-	if(!pkg) return 0;// пакет не найден в системе
-	else {
-		installed_pac_ver = alpm_pkg_get_version(pkg); // Вывод версии пакета
-		return 1;
-	}
+    const char *local;
+
+//  int a = alpm_db_get_valid(db_local); if (!a) printf ("Database is valid!\n"); else printf ("Database is INvalid!\n");
+    pkg = alpm_db_get_pkg(db_local,package);
+    local = alpm_pkg_get_name(pkg);
+    if(!local) return 0;// пакет не найден в системе
+    else {
+        installed_pac_ver = alpm_pkg_get_version(pkg); // Вывод версии пакета
+        return 1;
+    }
 }
 //////////////////////////////////////////////////
 int Actions::IsPackageInCache(char *package) {
@@ -399,20 +412,22 @@ return 0;
 }
 ////////////////////////////////////////////////////////////////
 int Actions::PacmanInit() {
-	int ret;
-	ret = alpm_initialize();
-	if(ret != 0) return(ret);
-	alpm_option_set_root("/root");
-	ret = alpm_option_set_dbpath("/var/lib/pacman");
-	if(ret != 0) return(ret);
-	db_local = alpm_option_get_localdb();
-	if(!db_local) return(1);
-	
-	ReadPacmanLog();
-	
-	return(0);	
+
+    alpm_handle = NULL;
+    alpm_handle = alpm_initialize("/","/var/lib/pacman/",0);
+    if(!alpm_handle) {
+        printf("Libalpm initialize error!\n");
+        return 1;
+    }
+    db_local = alpm_option_get_localdb(alpm_handle);
+    if(!db_local) {
+        printf("Databse error!\n");
+        return 1;
+    }
+    ReadPacmanLog();
+    return 0;
 }
 int Actions::PacmanDeinit() {
 	free (packages);
-	alpm_release();
+	alpm_release(alpm_handle);
 }
