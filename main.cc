@@ -17,9 +17,6 @@ int main(int argc, char **argv) {
 	char *package;
 	int param, quiet_downgrade = 0, list_downgrade = 0, show_list = 0;
 
-
-
-
 	if (argc) package = argv[1];
 	while ((param = getopt (argc, argv, "q:hl:n:")) != -1)
 		switch (param) {
@@ -99,10 +96,7 @@ int main(int argc, char **argv) {
 		printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
 		int ret = actions.CheckDowngradePossibility(package);
 		if (ret) return 1;
-		if (!quiet_downgrade) {
-//			printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, actions.packages[actions.pacmanlog_length].name);
-			printf ("Installed version: %s\n",actions.installed_pac_ver);
-		}
+		if (!quiet_downgrade) printf ("Installed version: %s\n",actions.installed_pac_ver);
 		int result = actions.DowngradePackage(package);
 		actions.PacmanDeinit();
 	    return result;

@@ -14,7 +14,7 @@ class Actions {
 	int DowngradePackage(char *);
 	int GetChoiseFromArm(char *);
 
-	alpm_handle_t *alpm_handle;	
+	alpm_handle_t *alpm_handle;
 	alpm_db_t *db_local;
 	alpm_pkg_t *pkg;
 	char *dbpath, *tmpchar;
@@ -44,22 +44,11 @@ class Actions {
 	char package_number[2];
 	//char *pac_number = package_number;
 	int def_pac;
-	
+
 };
 //////////////////////////////////////////////////
 int Actions::DowngradePackage(char *package) {
 	tmpchar=NULL;
-//		if (!quiet_downgrade) printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
-/*
-        int isinstalled = Actions::IsPackageInstalled(package);
-        if (isinstalled) {
-            if (!quiet_downgrade) printf("Installed version: %s\n",installed_pac_ver);
-        }
-        else {
-            if(!quiet_downgrade) printf("Package %s not installed. Terminating\n", package);
-            return 1;
-        }
-*/
 	    int isincache = Actions::IsPackageInCache(package); // Here also parsing pacman.log and using flag actions.package_never_upgraded
 	    if (isincache) {
 			if (!quiet_downgrade) printf("Downgrading from Cache, to version %s\n",install_version);
@@ -86,7 +75,7 @@ int Actions::GetChoiseFromArm(char *package) {
 
 		int pac_num;
 		int ispacmaninit = Actions::PacmanInit();
-	    if (ispacmaninit) { 
+	    if (ispacmaninit) {
 			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
 			return 1;
 		}
@@ -133,7 +122,7 @@ int Actions::IsPackageInCache(char *package) {
 			if (strcmp(packages[pacmanlog_length].cur_version, packages[pacmanlog_length].prev_version)) { // если был апгрейд на ту же версию, то ищем дальше
 					strcpy (full_path_to_packet,"/var/cache/pacman/pkg/");
 					strcat (full_path_to_packet,package);
-					strcat (full_path_to_packet,"-");				
+					strcat (full_path_to_packet,"-");
 					strcat (full_path_to_packet,packages[pacmanlog_length].prev_version);
                     strcat (full_path_to_packet,"-");
                     strcat (full_path_to_packet,architecture);
@@ -153,7 +142,7 @@ int Actions::IsPackageInCache(char *package) {
 	pFile2=fopen(full_path_to_packet2,"r");
 	if (pFile) {  // предыдущая версия пакета существует в локалке
 		strcpy(syztem,"sudo pacman -U "); // установка
-		strcat(syztem,full_path_to_packet);		
+		strcat(syztem,full_path_to_packet);
 		strcpy(install_command,syztem);
 		fclose(pFile);
 //		printf("%s\n",install_command);
@@ -178,7 +167,7 @@ int Actions::IsPackageInAur(char *package) {
 	char useragent[]="HTMLGET 1.0";
 	char htmlcontent[15000];
 	char *getpage = page;
-	
+
 	strcpy (ip,"208.92.232.29"); // Aur
 	strcpy(host,"aur.archlinux.org");
 	strcpy(page,"rpc.php?type=search&arg=");
@@ -198,33 +187,33 @@ int Actions::IsPackageInAur(char *package) {
     tmpint = send(sock, query, strlen(query), 0);
 	//while((tmpint = recv(sock, buf, sizeof(buf), 0)) > 0){
 		tmpint = recv(sock, buf, sizeof(buf), 0); // Принимаем первую часть ответа сервера, ее достаточно, чтобы понять есть ли пакет или нет
-		strcat(htmlcontent,buf);	
+		strcat(htmlcontent,buf);
 	//}
 	//printf("%d :: %d\n",sizeof(htmlcontent), sizeof(buf)); //DEBUG
   free(query);
   free(remote);
   close(sock);
-  
-  
+
+
 //// Parsing AUR response
 	sprintf(tmp,"%c",'"');
 	strcpy(full_pack_name,tmp);
 	strcat(full_pack_name,package);
-	sprintf(tmp,"%c",'"');	
+	sprintf(tmp,"%c",'"');
 	strcat(full_pack_name,tmp);
 	tmpchar=strtok(htmlcontent,",");
 	while (htmlcontent) {
 		tmpchar=strtok(NULL,","); if (!tmpchar) break;
-		char* pch = strstr(tmpchar,full_pack_name); 
+		char* pch = strstr(tmpchar,full_pack_name);
 		if (pch) return 1; // package in AUR
 	}
   	return 0; // package not in AUR
 }
 ///////////////////////////////////////////////////////
 void Actions::ReadPacmanLog() {
-	
+
 	action_counter=0;
-	char string[650];
+	char string[5000]; // Заменить на string нафиг, достало сегфолтится
 	char *p, *chop, *date, *time, *operat, *pack_name, *cur_version, *prev_version;
 	pFile=fopen("/var/log/pacman.log","r");
 	while (!feof(pFile)) {  // Count lines q-ty in pacman.log
@@ -236,19 +225,19 @@ void Actions::ReadPacmanLog() {
 	action_counter=0;
 	int i=0;
         while (!feof(pFile)) { // Parsing file pacman.log for upgrades history on this machine
-			chop = fgets(string,650,pFile); if (!chop) break;
-			//printf("Line: %d\n",i+1); // DEBUG: 
+			chop = fgets(string,5000,pFile); if (!chop) break;
+			//printf("Line: %d\n",i+1); // DEBUG:
 			date = strtok(string," ");
 			date++;
 			time = strtok(NULL,"] ");
 			operat = strtok(NULL," ");
 			pack_name = strtok(NULL," ");
 			if (!strcmp(operat,"upgraded")) {
-				//printf("Upgraded: %s, line: %d\n", pack_name, i+1); //DEBUG: 
+				//printf("Upgraded: %s, line: %d\n", pack_name, i+1); //DEBUG:
 				prev_version = strtok(NULL," ");
 				prev_version++;
 				cur_version = strtok(NULL," ");
-				cur_version = strtok(NULL,")");				
+				cur_version = strtok(NULL,")");
 				strcpy(packages[action_counter].date,date);
 				strcpy(packages[action_counter].time,time);
 				strcpy(packages[action_counter].name,pack_name);
@@ -271,18 +260,18 @@ int Actions::ReadArm(char *package) {
   char useragent[]="HTMLGET 1.0";
   char  htmlcontent[100000], *str, *last;
   char *getpage = page;
-    
+
 	arm_packages = new arm_packs[action_counter];
-	
+
 	if(sizeof(void*) == 4) { architecture = (char *)"32";  }
 	else if (sizeof(void*) == 8) { architecture = (char *)"64"; }
-	
+
 	strcpy (ip,"173.236.246.175"); // ARM
 	strcpy(host,"arm.konnichi.com");
 	sprintf (page,"search/raw.php?a=%s&q=^%s%24&core=1&extra=1&community=1",architecture,package);
 	//printf("%s",page); // DEBUG
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	
+
 	remote = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in *));
 	remote->sin_family = AF_INET;
 	tmpint = inet_pton(AF_INET, ip, (void *)(&(remote->sin_addr.s_addr)));
@@ -299,9 +288,9 @@ int Actions::ReadArm(char *package) {
 	while((tmpint = recv(sock, buf, sizeof(buf), 0)) > 0){
 		//printf("%s",buf); // DEBUG
 		strcat(htmlcontent,buf);
-		for (int i=0;sizeof(buf)>i;i++) { //Clear buffer for new data 
+		for (int i=0;sizeof(buf)>i;i++) { //Clear buffer for new data
 			buf[i]='\0';
-		}	
+		}
 	}
 
   free(query);
@@ -312,8 +301,8 @@ int Actions::ReadArm(char *package) {
 	//printf("::: %d\n", strlen(htmlcontent)); //DEBUG
 	if (!strlen(htmlcontent)) return 1;
 
-	str = strtok(htmlcontent, "\n");	
-	if (strstr(str,"http://")) { 
+	str = strtok(htmlcontent, "\n");
+	if (strstr(str,"http://")) {
 		strcpy(arm_packages[i].full_path,str);
 		//printf("%s\n",arm_packages[i].full_path); // DEBUG
 		i++;
@@ -321,7 +310,7 @@ int Actions::ReadArm(char *package) {
 	while(str = strtok(NULL, "\n")) {
 		if (!str) break;
 		last = &str[strlen(str)-3];
-		if (strcmp(last,"sig") && strstr(str,"http://")) { 
+		if (strcmp(last,"sig") && strstr(str,"http://")) {
 			strcpy(arm_packages[i].full_path,str);
 			//printf("%s\n",arm_packages[i].full_path); // DEBUG
 			i++;
@@ -334,7 +323,7 @@ int Actions::ReadArm(char *package) {
 	char *fully = full;
 	char release[10];
 	char version[20];
-	
+
 	strcpy(full,arm_packages[l].full_path);
 	fully = ReverseString(full);
 	str = strtok(full, ".");
@@ -347,7 +336,7 @@ int Actions::ReadArm(char *package) {
 		//strcpy(release,version); //printf("%s\n",release); // DEBUG
 		fully = ReverseString(version); //printf("%s\n",fully); // DEBUG
 		strcat(fully,"-");
-		strcat(fully,release);		
+		strcat(fully,release);
 		strcpy(arm_packages[l].version,fully); //printf("%s\n",version); // DEBUG// Copy version of package
 		strcpy(version,strtok(NULL, "/"));
 		fully = ReverseString(version);//printf("1: %s\n",fully); // DEBUG
@@ -359,11 +348,11 @@ int Actions::ReadArm(char *package) {
 		fully = ReverseString(version);
 		strcat(fully,"-");
 		strcat(fully,release);//printf("%s\n",fully); // DEBUG
-		
+
 		strcpy(arm_packages[l].version,fully); // Copy version of package
 		strcpy(version,strtok(NULL, "/"));
-		fully = ReverseString(version);//printf("2: %s\n",fully); // DEBUG	
-		strcpy(arm_packages[l].name,fully); // Copy name of package				
+		fully = ReverseString(version);//printf("2: %s\n",fully); // DEBUG
+		strcpy(arm_packages[l].name,fully); // Copy name of package
 	}
 }
 packages_in_arm = l;
@@ -383,7 +372,7 @@ char* Actions::IsPackageInArm(char *package, char *version) {
 			break;
 		}
 	}
-	if (arm_flag==1) return arm_packages[tmpint].full_path; 
+	if (arm_flag==1) return arm_packages[tmpint].full_path;
 	else return NULL;
 }
 ////////////////////////////////////////////////////////////////
@@ -400,7 +389,7 @@ char* Actions::ReverseString(char *string) {
 int Actions::CheckDowngradePossibility(char *package) {
 	int isinstalled = Actions::IsPackageInstalled(package);
 	if (!isinstalled) {
-		if(!quiet_downgrade) printf("Package '%s' not installed.\n", package); 
+		if(!quiet_downgrade) printf("Package '%s' not installed.\n", package);
 		return 1;
 	}
 	int isinaur = Actions::IsPackageInAur(package);
