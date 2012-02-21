@@ -156,52 +156,45 @@ int Actions::IsPackageInCache(char *package) {
 	else return 0;
 }
 //////////////////////////////////////////////////
+
+static int curl_handler(char *data, size_t size, size_t nmemb, string *buffer) {
+	  int result = 0;
+	  if (buffer != NULL) {
+		buffer->append(data, size * nmemb);
+		result = size * nmemb;
+	  }
+	  return result;
+}
+
+//////////////////////////////////////////////////
 int Actions::IsPackageInAur(char *package) {
-	struct sockaddr_in *remote;
-	int sock, port=80;
-	char ip[20], tmp[4], full_pack_name[30];
-	char buf[BUFSIZ], host[50], tpl[100], *query, page[80];
-	char useragent[]="HTMLGET 1.0";
-	char htmlcontent[15000];
-	char *getpage = page;
 
-	strcpy (ip,"208.92.232.29"); // Aur
-	strcpy(host,"aur.archlinux.org");
-	strcpy(page,"rpc.php?type=search&arg=");
-	strcat(page,package);
+	char *name, query[300];
+  	char conte[800000];
+	const char *cont = conte;
+    CURL *curl;
+    CURLcode result;
+	string content;
 
-	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	remote = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in *));
-	remote->sin_family = AF_INET;
-	tmpint = inet_pton(AF_INET, ip, (void *)(&(remote->sin_addr.s_addr)));
-	remote->sin_port = htons(port);
-	connect(sock, (struct sockaddr *)remote, sizeof(struct sockaddr));
-	strcpy(tpl,"GET /%s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s\r\n\r\n");
-	query = (char *)malloc(strlen(host)+strlen(tpl)+strlen(getpage)+strlen(useragent));
-	sprintf(query, tpl, getpage, host, useragent);
-	getpage=query;
-  	memset(buf, 0, sizeof(buf));
-    tmpint = send(sock, query, strlen(query), 0);
-	tmpint = recv(sock, buf, sizeof(buf), 0); // Принимаем первую часть ответа сервера, ее достаточно, чтобы понять есть ли пакет или нет
-	strcat(htmlcontent,buf);
-	//printf("%d :: %d\n",sizeof(htmlcontent), sizeof(buf)); //DEBUG
-  free(query);
-  free(remote);
-  close(sock);
+	curl = curl_easy_init();
+	sprintf(query,"http://aur.archlinux.org/rpc.php?type=search&arg=%s",package);
+	curl_easy_setopt(curl, CURLOPT_URL, query);
+	curl_easy_setopt(curl, CURLOPT_HEADER, 0);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_handler);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &content);
+	result = curl_easy_perform(curl);
+	cont=content.c_str();
 
-
-//// Parsing AUR response
-	sprintf(tmp,"%c",'"');
-	strcpy(full_pack_name,tmp);
-	strcat(full_pack_name,package);
-	sprintf(tmp,"%c",'"');
-	strcat(full_pack_name,tmp);
-	tmpchar=strtok(htmlcontent,",");
-	while (htmlcontent) {
-		tmpchar=strtok(NULL,","); if (!tmpchar) break;
-		char* pch = strstr(tmpchar,full_pack_name);
-		if (pch) return 1; // package in AUR
+	//// Parsing AUR response
+	cJSON *root = cJSON_Parse(cont);
+	cJSON *item = cJSON_GetObjectItem(root,"results");
+	for (int i=0;i<cJSON_GetArraySize(item);i++) {
+		cJSON *subitem=cJSON_GetArrayItem(item,i);
+		name = cJSON_GetObjectItem(subitem,"Name")->valuestring;
+		if (!strcmp(name,package)) return 1; // package in AUR
 	}
+	cJSON_Delete(root);
+	curl_easy_cleanup(curl);
   	return 0; // package not in AUR
 }
 ///////////////////////////////////////////////////////
@@ -210,6 +203,7 @@ void Actions::ReadPacmanLog() {
 	action_counter=0;
 	char strr[3]; // Заменить на string нафиг, достало сегфолтится
 	char *cstr, *p, *chop, *date, *time, *operat, *pack_name, *cur_version, *prev_version;
+	int i=0;
 	pFile=fopen("/var/log/pacman.log","r");
 	while (!feof(pFile)) {  // Count lines q-ty in pacman.log
 		chop = fgets(strr,2,pFile); if (!chop) break;
@@ -218,7 +212,6 @@ void Actions::ReadPacmanLog() {
 	fclose(pFile);
 	packages = new packs[action_counter];
 	action_counter=0;
-	int i=0;
 
 	string line;
 	ifstream log ("/var/log/pacman.log");
@@ -258,60 +251,35 @@ void Actions::ReadPacmanLog() {
 }
 ///////////////////////////////////////////////////////
 int Actions::ReadArm(char *package) {
-  struct sockaddr_in *remote;
-  int sock, port=80;
-  char *architecture,  ip[20], buf[100000];
-  char host[50], *query, page[80], tpl[100];
-  char useragent[]="HTMLGET 1.0";
-  char  htmlcontent[100000], *str, *last;
-  char *getpage = page;
+
+	char  *str, *last, *architecture, conte[800000];
+    CURL *curl;
+    CURLcode result;
+	string content;
+	const char *cont = conte;
+	int i=0;
 
 	arm_packages = new arm_packs[action_counter];
 
 	if(sizeof(void*) == 4) { architecture = (char *)"32";  }
 	else if (sizeof(void*) == 8) { architecture = (char *)"64"; }
 
-	strcpy (ip,"173.236.246.175"); // ARM
-	strcpy(host,"arm.konnichi.com");
-	sprintf (page,"search/raw.php?a=%s&q=^%s%24&core=1&extra=1&community=1",architecture,package);
-	//printf("%s",page); // DEBUG
-	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	curl = curl_easy_init();
+	sprintf (conte,"http://arm.konnichi.com/search/raw.php?a=%s&q=^%s%24&core=1&extra=1&community=1",architecture,package);
+	curl_easy_setopt(curl, CURLOPT_URL, conte);
+	curl_easy_setopt(curl, CURLOPT_HEADER, 0);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_handler);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &content);
+	result = curl_easy_perform(curl);
+	cont=content.c_str();
+	strcpy(conte,content.c_str());
 
-	remote = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in *));
-	remote->sin_family = AF_INET;
-	tmpint = inet_pton(AF_INET, ip, (void *)(&(remote->sin_addr.s_addr)));
-	remote->sin_port = htons(port);
-	connect(sock, (struct sockaddr *)remote, sizeof(struct sockaddr));
-	strcpy(tpl,"GET /%s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s\r\n\r\n");
-
-	query = (char *)malloc(strlen(host)+strlen(tpl)+strlen(getpage)+strlen(useragent));
-	sprintf(query, tpl, getpage, host, useragent);
-	getpage=query;
-  	memset(buf, 0, sizeof(buf));
-    tmpint = send(sock, getpage, strlen(getpage), 0);
-
-	while((tmpint = recv(sock, buf, sizeof(buf), 0)) > 0){
-		//printf("%s",buf); // DEBUG
-		strcat(htmlcontent,buf);
-		for (int i=0;sizeof(buf)>i;i++) { //Clear buffer for new data
-			buf[i]='\0';
-		}
-	}
-
-  free(query);
-  free(remote);
-  close(sock);
 // Processing data from ARM
-	int i=0;
-	//printf("::: %d\n", strlen(htmlcontent)); //DEBUG
-	if (!strlen(htmlcontent)) return 1;
-
-	str = strtok(htmlcontent, "\n");
-	if (strstr(str,"http://")) {
-		strcpy(arm_packages[i].full_path,str);
-		//printf("%s\n",arm_packages[i].full_path); // DEBUG
-		i++;
-	}
+	if (!strlen(cont)) return 1;
+	str = strtok(conte, "\n");
+	strcpy(arm_packages[i].full_path,str);
+	//printf("arm_packages[i].full_path: %s\n",arm_packages[i].full_path); // DEBUG
+	i++;
 	while(str = strtok(NULL, "\n")) {
 		if (!str) break;
 		last = &str[strlen(str)-3];
@@ -321,8 +289,7 @@ int Actions::ReadArm(char *package) {
 			i++;
 		}
 	}
-// Get info about packages in ARM: version, package name
-	int l=0;
+	int l=0; // Get info about packages in ARM: version, package name
 	for (l=0;strlen(arm_packages[l].full_path)>0;l++) {
 	char full[1000];
 	char *fully = full;
@@ -338,13 +305,12 @@ int Actions::ReadArm(char *package) {
 	if (strstr(str,"46_68x") || strstr(str,"686i")) { // For stupid packages in ARM :(
 		strcpy(release,strtok(NULL, "-")); // release
 		strcpy(version,strtok(NULL, "-")); // version
-		//strcpy(release,version); //printf("%s\n",release); // DEBUG
-		fully = ReverseString(version); //printf("%s\n",fully); // DEBUG
+		fully = ReverseString(version);
 		strcat(fully,"-");
 		strcat(fully,release);
-		strcpy(arm_packages[l].version,fully); //printf("%s\n",version); // DEBUG// Copy version of package
+		strcpy(arm_packages[l].version,fully);
 		strcpy(version,strtok(NULL, "/"));
-		fully = ReverseString(version);//printf("1: %s\n",fully); // DEBUG
+		fully = ReverseString(version);
 		strcpy(arm_packages[l].name,fully); // Copy name of package
 	}
 	else {
@@ -352,11 +318,11 @@ int Actions::ReadArm(char *package) {
 		strcpy(version,strtok(NULL, "-")); // version
 		fully = ReverseString(version);
 		strcat(fully,"-");
-		strcat(fully,release);//printf("%s\n",fully); // DEBUG
+		strcat(fully,release);
 
 		strcpy(arm_packages[l].version,fully); // Copy version of package
 		strcpy(version,strtok(NULL, "/"));
-		fully = ReverseString(version);//printf("2: %s\n",fully); // DEBUG
+		fully = ReverseString(version);
 		strcpy(arm_packages[l].name,fully); // Copy name of package
 	}
 }

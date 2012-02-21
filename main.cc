@@ -1,14 +1,8 @@
-//#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <getopt.h>
 #include <alpm.h>
 #include <alpm_list.h>
-#include <sys/stat.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
+#include <curl/curl.h>
+#include "cJSON.h"
 ////////////////////////////////////
 #include <iostream>
 #include <fstream>
