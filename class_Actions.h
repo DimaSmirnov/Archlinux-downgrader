@@ -33,7 +33,6 @@ class Actions {
 	}; packs  *packages;
 	struct  arm_packs{ // -- Структура список пакетов в ARM
 		char full_path[300]; // полный адрес до пакета
-		//char repository[30]; // Repositroy of package
 		char version[50]; // Version of package
 		char name[50]; // Name of package
 	}; arm_packs  *arm_packages;
@@ -42,7 +41,6 @@ class Actions {
 	int packages_in_arm;
 	int tmpint, debug, show_list, quiet_downgrade;
 	char package_number[2];
-	//char *pac_number = package_number;
 	int def_pac;
 
 };
@@ -101,7 +99,6 @@ int Actions::GetChoiseFromArm(char *package) {
 int Actions::IsPackageInstalled(char *package) {
     const char *local;
 
-//  int a = alpm_db_get_valid(db_local); if (!a) printf ("Database is valid!\n"); else printf ("Database is INvalid!\n");
     pkg = alpm_db_get_pkg(db_local,package);
     local = alpm_pkg_get_name(pkg);
     if(!local) return 0;// пакет не найден в системе
@@ -185,10 +182,8 @@ int Actions::IsPackageInAur(char *package) {
 	getpage=query;
   	memset(buf, 0, sizeof(buf));
     tmpint = send(sock, query, strlen(query), 0);
-	//while((tmpint = recv(sock, buf, sizeof(buf), 0)) > 0){
-		tmpint = recv(sock, buf, sizeof(buf), 0); // Принимаем первую часть ответа сервера, ее достаточно, чтобы понять есть ли пакет или нет
-		strcat(htmlcontent,buf);
-	//}
+	tmpint = recv(sock, buf, sizeof(buf), 0); // Принимаем первую часть ответа сервера, ее достаточно, чтобы понять есть ли пакет или нет
+	strcat(htmlcontent,buf);
 	//printf("%d :: %d\n",sizeof(htmlcontent), sizeof(buf)); //DEBUG
   free(query);
   free(remote);
@@ -213,25 +208,34 @@ int Actions::IsPackageInAur(char *package) {
 void Actions::ReadPacmanLog() {
 
 	action_counter=0;
-	char string[5000]; // Заменить на string нафиг, достало сегфолтится
-	char *p, *chop, *date, *time, *operat, *pack_name, *cur_version, *prev_version;
+	char strr[3]; // Заменить на string нафиг, достало сегфолтится
+	char *cstr, *p, *chop, *date, *time, *operat, *pack_name, *cur_version, *prev_version;
 	pFile=fopen("/var/log/pacman.log","r");
 	while (!feof(pFile)) {  // Count lines q-ty in pacman.log
-		chop = fgets(string,2,pFile); if (!chop) break;
+		chop = fgets(strr,2,pFile); if (!chop) break;
 		action_counter++;
 	}
-	rewind (pFile);
+	fclose(pFile);
 	packages = new packs[action_counter];
 	action_counter=0;
 	int i=0;
-        while (!feof(pFile)) { // Parsing file pacman.log for upgrades history on this machine
-			chop = fgets(string,5000,pFile); if (!chop) break;
-			//printf("Line: %d\n",i+1); // DEBUG:
-			date = strtok(string," ");
+
+	string line;
+	ifstream log ("/var/log/pacman.log");
+	  if (log.is_open()) {
+		while ( log.good()) { // Parsing file pacman.log
+			getline (log,line);
+			i++;
+			if (line.size()==19) continue;
+			cstr = new char [line.size()+1];
+			strcpy (cstr, line.c_str());
+			date = strtok(cstr," ");
 			date++;
 			time = strtok(NULL,"] ");
 			operat = strtok(NULL," ");
 			pack_name = strtok(NULL," ");
+			//printf("Line: %d, operat: %s\n",i, operat); // DEBUG:
+			if (!operat) continue;
 			if (!strcmp(operat,"upgraded")) {
 				//printf("Upgraded: %s, line: %d\n", pack_name, i+1); //DEBUG:
 				prev_version = strtok(NULL," ");
@@ -246,9 +250,10 @@ void Actions::ReadPacmanLog() {
 				strcpy(packages[action_counter].prev_version,prev_version);
 				action_counter++;
 			}
-			i++;
-      }
-   fclose(pFile);
+			delete[] cstr;
+		}
+		log.close();
+	  }
    pacmanlog_length = action_counter;
 }
 ///////////////////////////////////////////////////////

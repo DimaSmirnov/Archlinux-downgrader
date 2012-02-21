@@ -1,4 +1,4 @@
-#include <stdio.h>
+//#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -9,7 +9,12 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+////////////////////////////////////
+#include <iostream>
+#include <fstream>
+#include <string>
 
+using namespace std;
 #include "class_Interface.h"
 #include "class_Actions.h"
 
