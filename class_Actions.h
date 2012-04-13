@@ -142,7 +142,6 @@ int Actions::IsPackageInCache(char *package) {
 		strcat(syztem,full_path_to_packet);
 		strcpy(install_command,syztem);
 		fclose(pFile);
-//		printf("%s\n",install_command);
 		return 1;
 	}
 	else if (pFile2) {
@@ -150,7 +149,6 @@ int Actions::IsPackageInCache(char *package) {
         strcat(syztem,full_path_to_packet2);
         strcpy(install_command,syztem);
         fclose(pFile2);
-//		printf("%s\n",install_command);
         return 1;
 	}
 	else return 0;

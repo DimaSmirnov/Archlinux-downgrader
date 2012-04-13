@@ -1,12 +1,11 @@
 #include <string.h>
+#include <unistd.h>
 #include <alpm.h>
 #include <alpm_list.h>
 #include <curl/curl.h>
 #include "cJSON.h"
-////////////////////////////////////
-#include <iostream>
+
 #include <fstream>
-#include <string>
 
 using namespace std;
 #include "class_Interface.h"
@@ -19,7 +18,7 @@ int main(int argc, char **argv) {
 	if (argc) package = argv[1];
 	while ((param = getopt (argc, argv, "q:hl:n:")) != -1)
 		switch (param) {
-			case 'q':{ // Quiet downgrade
+			case 'q':{ // Quiet downgrade (test option)
 				quiet_downgrade = 1;
 				package = optarg;
 				break;
@@ -27,7 +26,6 @@ int main(int argc, char **argv) {
 			case 'l':{ // Show list of possible packages on downgrade
 				show_list = 1;
 				package = optarg;
-				//printf("Show on downgrade: %s\n",package);
 				break;
 			}
 			case 'n':{ // Downgrade n packages
@@ -80,7 +78,6 @@ int main(int argc, char **argv) {
 		else pac_num = atoi(actions.package_number);
 		strcpy(actions.install_command,"sudo pacman -U "); strcat(actions.install_command,actions.arm_packages[pac_num-1].full_path);
 		system(actions.install_command);
-		//printf ("%s\n", actions.install_command);
 		actions.PacmanDeinit();
 		return 0;
 	}

@@ -1,6 +1,6 @@
 # Author: Dmitriy Smirnov <other@igus.lv>
 pkgname=downgrader
-pkgver=1.3.0
+pkgver=1.3.2
 pkgrel=1
 pkgdesc="Powerful packages downgrader for Archlinux. Works with libalpm, ARM and pacman logs"
 arch=('any')
