@@ -78,6 +78,7 @@ int Actions::GetChoiseFromArm(char *package) {
 			return 1;
 		}
 		int ret = Actions::CheckDowngradePossibility(package);
+		if (ret) return 1;
 		Actions::ReadPacmanLog();
 		ret = Actions::ReadArm(package);
 		ret = Actions::IsPackageInCache(package);
@@ -98,7 +99,6 @@ int Actions::GetChoiseFromArm(char *package) {
 //////////////////////////////////////////////////
 int Actions::IsPackageInstalled(char *package) {
     const char *local;
-
     pkg = alpm_db_get_pkg(db_local,package);
     local = alpm_pkg_get_name(pkg);
     if(!local) return 0;// пакет не найден в системе
@@ -175,7 +175,7 @@ int Actions::IsPackageInAur(char *package) {
 	string content;
 
 	curl = curl_easy_init();
-	sprintf(query,"http://aur.archlinux.org/rpc.php?type=search&arg=%s",package);
+	sprintf(query,"https://aur.archlinux.org/rpc.php?type=search&arg=%s",package);
 	curl_easy_setopt(curl, CURLOPT_URL, query);
 	curl_easy_setopt(curl, CURLOPT_HEADER, 0);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_handler);
@@ -185,6 +185,7 @@ int Actions::IsPackageInAur(char *package) {
 
 	//// Parsing AUR response
 	cJSON *root = cJSON_Parse(cont);
+
 	cJSON *item = cJSON_GetObjectItem(root,"results");
 	for (int i=0;i<cJSON_GetArraySize(item);i++) {
 		cJSON *subitem=cJSON_GetArrayItem(item,i);
@@ -193,6 +194,7 @@ int Actions::IsPackageInAur(char *package) {
 	}
 	cJSON_Delete(root);
 	curl_easy_cleanup(curl);
+
   	return 0; // package not in AUR
 }
 ///////////////////////////////////////////////////////

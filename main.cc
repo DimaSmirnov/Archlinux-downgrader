@@ -15,7 +15,13 @@ int main(int argc, char **argv) {
 	char *package;
 	int param, quiet_downgrade = 0, list_downgrade = 0, show_list = 0;
 
-	if (argc) package = argv[1];
+	if (argc==2) package = argv[1];
+	else if (argc==3) package = argv[2];
+	else {
+		Interface interface;
+		interface.ShowHelpWindow();
+		return 0;
+	}
 	while ((param = getopt (argc, argv, "q:hl:n:")) != -1)
 		switch (param) {
 			case 'q':{ // Quiet downgrade (test option)
@@ -72,7 +78,7 @@ int main(int argc, char **argv) {
 		printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
 		actions.show_list = show_list;
 		int ret = actions.GetChoiseFromArm(package);
-		if (ret) return 1; // Ошибка инициализации
+		if (ret) return 1; // Выход с ошибкой
 		if (!strcmp(actions.package_number,"d")) pac_num = actions.def_pac;
 		else if (!strcmp(actions.package_number,"q")) return 0;
 		else pac_num = atoi(actions.package_number);
