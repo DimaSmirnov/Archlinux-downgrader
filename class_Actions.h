@@ -18,7 +18,7 @@ class Actions {
 	alpm_db_t *db_local;
 	alpm_pkg_t *pkg;
 	char *dbpath, *tmpchar;
-	char install_command[200]; // Клманда для установки
+	char install_command[200]; // Команда для установки
 	char install_version[30]; // Версия пакета для установки
 	const char *installed_pac_ver;  // Текущая установленная версия
 	long int pacmanlog_length;
@@ -89,7 +89,7 @@ int Actions::GetChoiseFromArm(char *package) {
 			printf("%d: %s-%s", i+1, Actions::arm_packages[i].name,Actions::arm_packages[i].version);
 			if (!strcmp(Actions::arm_packages[i].version,Actions::installed_pac_ver)) printf(" [installed]\n");
 			if (!strcmp(Actions::arm_packages[i].version,Actions::install_version)) { printf(" [will be installed by default]\n"); Actions::def_pac=i+1; }
-			else printf("\n");
+			//else printf("\n");
 		}
 		printf ("Please enter package number, [q] to quit, [d] to install default package: ");
 		scanf ("%s",Actions::package_number);
@@ -202,7 +202,7 @@ void Actions::ReadPacmanLog() {
 
 	action_counter=0;
 	char strr[3]; // Заменить на string нафиг, достало сегфолтится
-	char *cstr, *p, *chop, *date, *time, *operat, *pack_name, *cur_version, *prev_version;
+	char *cstr, *p, *chop, *date, *time, *operat, *pack_name, *cur_version, *prev_version, *fake;
 	int i=0;
 	pFile=fopen("/var/log/pacman.log","r");
 	while (!feof(pFile)) {  // Count lines q-ty in pacman.log
@@ -219,14 +219,16 @@ void Actions::ReadPacmanLog() {
 		while ( log.good()) { // Parsing file pacman.log
 			getline (log,line);
 			i++;
-			if (line.size()==19) continue;
+			//printf("Line: %d\n",i); // DEBUG:
 			cstr = new char [line.size()+1];
 			strcpy (cstr, line.c_str());
 			date = strtok(cstr," ");
 			date++;
 			time = strtok(NULL,"] ");
+			fake = strtok(NULL," ");
 			operat = strtok(NULL," ");
 			pack_name = strtok(NULL," ");
+
 			//printf("Line: %d, operat: %s\n",i, operat); // DEBUG:
 			if (!operat) continue;
 			if (!strcmp(operat,"upgraded")) {
@@ -242,7 +244,9 @@ void Actions::ReadPacmanLog() {
 				strcpy(packages[action_counter].cur_version,cur_version);
 				strcpy(packages[action_counter].prev_version,prev_version);
 				action_counter++;
+				//printf ("date: %s, time: %s, operat: %s, pack_name: %s\n", date, time, operat, pack_name);
 			}
+
 			delete[] cstr;
 		}
 		log.close();
@@ -252,14 +256,14 @@ void Actions::ReadPacmanLog() {
 ///////////////////////////////////////////////////////
 int Actions::ReadArm(char *package) {
 
-	char  *str, *last, *architecture, conte[800000];
+	char  *str, *last, *architecture, conte[8000000];
     CURL *curl;
     CURLcode result;
 	string content;
 	const char *cont = conte;
 	int i=0;
 
-	arm_packages = new arm_packs[action_counter];
+	arm_packages = new arm_packs[10000]; //[action_counter];
 
 	if(sizeof(void*) == 4) { architecture = (char *)"32";  }
 	else if (sizeof(void*) == 8) { architecture = (char *)"64"; }
@@ -302,6 +306,7 @@ int Actions::ReadArm(char *package) {
 	str = strtok(NULL, ".");
 	str = strtok(NULL, ".");
 	str = strtok(NULL, "-");
+
 	if (strstr(str,"46_68x") || strstr(str,"686i")) { // For stupid packages in ARM :(
 		strcpy(release,strtok(NULL, "-")); // release
 		strcpy(version,strtok(NULL, "-")); // version
@@ -313,6 +318,7 @@ int Actions::ReadArm(char *package) {
 		fully = ReverseString(version);
 		strcpy(arm_packages[l].name,fully); // Copy name of package
 	}
+
 	else {
 		strcpy(release,str); // release
 		strcpy(version,strtok(NULL, "-")); // version
@@ -379,11 +385,11 @@ int Actions::PacmanInit() {
         printf("Libalpm initialize error!\n");
         return 1;
     }
-    db_local = alpm_option_get_localdb(alpm_handle);
-    if(!db_local) {
-        printf("Databse error!\n");
-        return 1;
-    }
+    db_local = alpm_get_localdb(alpm_handle);
+    //if(!db_local) {
+    //    printf("Databse error!\n");
+    //    return 1;
+    //}
     ReadPacmanLog();
     return 0;
 }
