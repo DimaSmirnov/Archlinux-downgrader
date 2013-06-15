@@ -88,10 +88,10 @@ int Actions::GetChoiseFromArm(char *package) {
 		for (int i=0;i<Actions::packages_in_arm;i++) {
 			printf("%d: %s-%s", i+1, Actions::arm_packages[i].name,Actions::arm_packages[i].version);
 			if (!strcmp(Actions::arm_packages[i].version,Actions::installed_pac_ver)) printf(" [installed]\n");
-			if (!strcmp(Actions::arm_packages[i].version,Actions::install_version)) { printf(" [will be installed by default]\n"); Actions::def_pac=i+1; }
-			//else printf("\n");
+			else if (!strcmp(Actions::arm_packages[i].version,Actions::install_version)) { printf(" [will be installed by default]\n"); Actions::def_pac=i+1; }
+			else printf("\n");
 		}
-		printf ("Please enter package number, [q] to quit, [d] to install default package: ");
+		printf (">> Please enter package number, [q] to quit, [d] to install default package: ");
 		scanf ("%s",Actions::package_number);
 
 		return 0;

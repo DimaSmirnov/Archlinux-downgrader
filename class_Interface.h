@@ -5,7 +5,7 @@ class Interface {
 };
 //////////////////////////////////////////////////
 void Interface::ShowHelpWindow() {
-	printf("\nDowngrader, version 1.5.3-2 (libalpm.so.8)\n");
+	printf("\nDowngrader, version 1.5.6-2 (libalpm.so.8)\n");
 	printf(" usage: downgrader [ -h ] [ -n <packages q-ty> ] [ -l <package name> ] <PACKAGE_NAME>\n");
 	printf("  options:\n");
 	printf("   -h   <print this help and exit>\n");
