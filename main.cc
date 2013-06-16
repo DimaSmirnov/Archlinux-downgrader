@@ -5,11 +5,15 @@
 #include <curl/curl.h>
 #include "cJSON.h"
 
-#include <fstream>
+#define MAX_PKGS_FROM_ARM_TOTAL 10000
+#define MAX_PKGS_FROM_ARM_FOR_USER 30
+#define VERSION "1.5.7-2"
 
+#include <fstream>
 using namespace std;
 #include "class_Interface.h"
 #include "class_Actions.h"
+
 
 int main(int argc, char **argv) {
 	char *package;
@@ -22,7 +26,7 @@ int main(int argc, char **argv) {
 		interface.ShowHelpWindow();
 		return 0;
 	}
-	while ((param = getopt (argc, argv, "q:hl:n:")) != -1)
+	while ((param = getopt (argc, argv, "q:hl:")) != -1)
 		switch (param) {
 			case 'q':{ // Quiet downgrade (test option)
 				quiet_downgrade = 1;
@@ -34,10 +38,6 @@ int main(int argc, char **argv) {
 				package = optarg;
 				break;
 			}
-			case 'n':{ // Downgrade n packages
-				list_downgrade = atoi(optarg);
-				break;
-			}
 			case 'h':{ // help
 				Interface interface;
 				interface.ShowHelpWindow();
@@ -45,33 +45,8 @@ int main(int argc, char **argv) {
 			}
 		}
 	Actions actions;
-	/////////////////////////////// Downgrade list of packages
-	if (list_downgrade) {
-		int ispacmaninit = actions.PacmanInit();
-	    if (ispacmaninit) {
-			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
-			return 1;
-		}
-		printf ("Downgrade %d last packages\n",list_downgrade);
-		for (;actions.pacmanlog_length>0;actions.pacmanlog_length--) {
-			if (!strcmp("upgraded",actions.packages[actions.pacmanlog_length].action)) {
-				int ret = actions.CheckDowngradePossibility(actions.packages[actions.pacmanlog_length].name);
-				if (!ret) {
-					if (!quiet_downgrade) {
-						printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, actions.packages[actions.pacmanlog_length].name);
-						printf ("Installed version: %s\n",actions.installed_pac_ver);
-					}
-					int result = actions.DowngradePackage(actions.packages[actions.pacmanlog_length].name);
-				}
-				list_downgrade--;
-				if (!list_downgrade) break;
-			}
-		}
-		actions.PacmanDeinit();
-		return 0;
-	}
 	///////////////////////////// Show possible packages list when downgrade
-	else if (show_list) {
+	if (show_list) {
 		int def_pac = 0;
 		int pac_num;
 
@@ -82,7 +57,7 @@ int main(int argc, char **argv) {
 		if (!strcmp(actions.package_number,"d")) pac_num = actions.def_pac;
 		else if (!strcmp(actions.package_number,"q")) return 0;
 		else pac_num = atoi(actions.package_number);
-		strcpy(actions.install_command,"sudo pacman -U "); strcat(actions.install_command,actions.arm_packages[pac_num-1].full_path);
+		strcpy(actions.install_command,"sudo pacman -U "); strcat(actions.install_command,actions.arm_packages[pac_num].full_path);
 		system(actions.install_command);
 		actions.PacmanDeinit();
 		return 0;
