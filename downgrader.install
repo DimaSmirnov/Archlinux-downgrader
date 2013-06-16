@@ -1,0 +1,5 @@
+post_install() {
+	echo ">>>>> Now, for correct work I need to clear your pacman log file. Please confirm"
+	mv /var/log/pacman.log /var/log/pacman.log.old
+	touch /var/log/pacman.log
+}

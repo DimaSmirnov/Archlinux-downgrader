@@ -8,15 +8,15 @@ depends=('pacman' 'intltool' 'sudo')
 license=("GPL")
 url="https://github.com/DimaSmirnov/Archlinux-downgrader"
 source=("http://www.igus.lv/downgrader/downgrader.tar.xz")
+install=$pkgname.install
 
 build() {
   cd "$srcdir"
  make
 }
+
 package() {
-  echo ">>>>> Now, for correct work I need to clear your pacman log file. Please confirm"
-  sudo rm /var/log/pacman.log
-  sudo touch /var/log/pacman.log
   cd "$srcdir"
   install -D downgrader "$pkgdir/usr/bin/downgrader"
 }
+
