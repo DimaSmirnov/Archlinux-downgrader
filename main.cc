@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
 			return 1;
 		}
-		printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
+		if(!quiet_downgrade) printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
 		int ret = actions.CheckDowngradePossibility(package);
 		if (ret) return 1;
 		if (!quiet_downgrade) printf ("Installed version: %s\n",actions.installed_pac_ver);

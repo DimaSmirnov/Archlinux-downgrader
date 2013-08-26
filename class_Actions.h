@@ -69,8 +69,10 @@ int Actions::DowngradePackage(char *package) {
 				return 0;
 		}
 	}
-	if (package_never_upgraded==1) printf ("Sorry, package %s can`t be downgrade.\n",package); //Package never upgrades, but installed
-	else printf("Package %s not found in AUR, local cache or ARM. Terminating\n", package);
+	if(!quiet_downgrade) {
+		if (package_never_upgraded==1) printf ("Sorry, package %s can`t be downgrade.\n",package); //Package never upgrades, but installed
+		else printf("Package %s not found in AUR, local cache or ARM. Terminating\n", package);
+	}
 	return 1;
 }
 //////////////////////////////////////////////////
@@ -118,8 +120,8 @@ int Actions::IsPackageInCache(char *package) {
 	else if (sizeof(void*) == 8) architecture = (char *)"x86_64";
 	package_never_upgraded = 1;
 	for (;pacmanlog_length>0;pacmanlog_length--) {
-		if (!strcmp(package,packages[pacmanlog_length].name) && !strcmp("upgraded",packages[pacmanlog_length].action)) { // нашли нужный пакет для апгрейда
-			if (strcmp(packages[pacmanlog_length].cur_version, packages[pacmanlog_length].prev_version)) { // если был апгрейд на ту же версию, то ищем дальше
+		if (!strcmp(package,packages[pacmanlog_length].name) && !strcmp("upgraded",packages[pacmanlog_length].action)) { // found necessary package
+			if (strcmp(packages[pacmanlog_length].cur_version, packages[pacmanlog_length].prev_version)) { // if the same version - search next
 				strcpy (full_path_to_packet,"/var/cache/pacman/pkg/");
 				strcat (full_path_to_packet,package);
 				strcat (full_path_to_packet,"-");
@@ -137,15 +139,15 @@ int Actions::IsPackageInCache(char *package) {
 	strcpy(install_version,packages[pacmanlog_length].prev_version);
 	pFile=fopen(full_path_to_packet,"r");
 	pFile2=fopen(full_path_to_packet2,"r");
-	if (pFile) {  // предыдущая версия пакета существует в локалке
-		strcpy(syztem,"sudo pacman -U "); // установка
+	if (pFile) {  // previously version available in cache
+		strcpy(syztem,"sudo pacman -U "); // install
 		strcat(syztem,full_path_to_packet);
 		strcpy(install_command,syztem);
 		fclose(pFile);
 		return 1;
 	}
 	else if (pFile2) {
-        strcpy(syztem,"sudo pacman -U "); // установка
+        strcpy(syztem,"sudo pacman -U "); // install
         strcat(syztem,full_path_to_packet2);
         strcpy(install_command,syztem);
         fclose(pFile2);
@@ -258,8 +260,6 @@ int Actions::ReadArm(char *package) {
 	char *content=conte;
 	int counter, counter2;
 
-
-
 	if(sizeof(void*) == 4) { architecture = (char *)"i686";  }
 	else if (sizeof(void*) == 8) { architecture = (char *)"x86_64"; }
 
@@ -287,16 +287,15 @@ int Actions::ReadArm(char *package) {
 		strcpy(arm_packages[counter].full_path,arm_packages_full[counter].full_path);
 		counter++;
 	}
-	//printf("Packages in ARM: %d\n",packages_in_arm);
+
 	int l=0, i=1;
 	char full[1000];
 	while (l<MAX_PKGS_FROM_ARM_FOR_USER) { // Get info about packages in ARM
 		if (!strlen(arm_packages[l].full_path)) break;
 		strcpy(full,arm_packages[l].full_path);
-		if (l==packages_in_arm) break;
+		//if (l==packages_in_arm) break;
 		str = strtok(full, "|");
 		if (strcmp(str,"testing")) { // Exclude packages from `testing`
-
 			strcpy(arm_packages[i].repository,str);
 			//printf("%d: Repo: %s",i, arm_packages[i].repository);
 			str = strtok(NULL, "|");
@@ -313,6 +312,8 @@ int Actions::ReadArm(char *package) {
 		}
 		l++;
 	}
+	packages_in_arm = i-1; // finally packages q-ty in ARM (without testing repo)
+	if(!quiet_downgrade) printf("Packages in ARM: %d\n",packages_in_arm);
 return 0;
 }
 ////////////////////////////////////////////////////////////////
