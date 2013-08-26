@@ -68,9 +68,8 @@ int Actions::DowngradePackage(char *package) {
 				system(install_command);
 				return 0;
 		}
-		free (arm_packages);
 	}
-	if (package_never_upgraded==1) printf ("Package %s never upgraded.You can try to remove this package.\n",package); //Package never upgrades, but installed
+	if (package_never_upgraded==1) printf ("Sorry, package %s can`t be downgrade.\n",package); //Package never upgrades, but installed
 	else printf("Package %s not found in AUR, local cache or ARM. Terminating\n", package);
 	return 1;
 }
@@ -88,8 +87,7 @@ int Actions::GetChoiseForPackage(char *package) {
 		if (ret) return 1;
 		ret = Actions::ReadArm(package);
 		ret = Actions::IsPackageInCache(package);
-		for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER;i++) {
-			if (!strlen(Actions::arm_packages[i].name)) break;
+		for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER && i<=Actions::packages_in_arm;i++) {
 			printf("%d: %s-%s", i, Actions::arm_packages[i].name,Actions::arm_packages[i].version);
 			if (!strcmp(Actions::arm_packages[i].version,Actions::installed_pac_ver)) printf(" [installed]\n");
 			else if (!strcmp(Actions::arm_packages[i].version,Actions::install_version)) { printf(" [will be installed by default]\n"); Actions::def_pac=i; }
@@ -260,8 +258,7 @@ int Actions::ReadArm(char *package) {
 	char *content=conte;
 	int counter, counter2;
 
-	arm_packages = new arm_packs[MAX_PKGS_FROM_ARM_FOR_USER];
-	arm_packages_full = new arm_packs_full[MAX_PKGS_FROM_ARM_TOTAL];
+
 
 	if(sizeof(void*) == 4) { architecture = (char *)"i686";  }
 	else if (sizeof(void*) == 8) { architecture = (char *)"x86_64"; }
@@ -286,29 +283,32 @@ int Actions::ReadArm(char *package) {
 	}
 	packages_in_arm = counter2;
 	counter=0;
-	while(counter<MAX_PKGS_FROM_ARM_FOR_USER && counter<packages_in_arm) { //counter2>=0) {
+	while(counter<MAX_PKGS_FROM_ARM_FOR_USER && counter<packages_in_arm) {
 		strcpy(arm_packages[counter].full_path,arm_packages_full[counter].full_path);
 		counter++;
 	}
+	//printf("Packages in ARM: %d\n",packages_in_arm);
 	int l=0, i=1;
+	char full[1000];
 	while (l<MAX_PKGS_FROM_ARM_FOR_USER) { // Get info about packages in ARM
-		char full[1000];
 		if (!strlen(arm_packages[l].full_path)) break;
 		strcpy(full,arm_packages[l].full_path);
+		if (l==packages_in_arm) break;
 		str = strtok(full, "|");
 		if (strcmp(str,"testing")) { // Exclude packages from `testing`
+
 			strcpy(arm_packages[i].repository,str);
-			printf("Repo: %s",arm_packages[i].repository);
+			//printf("%d: Repo: %s",i, arm_packages[i].repository);
 			str = strtok(NULL, "|");
 			strcpy(arm_packages[i].name,str);
-			printf(", name: %s",arm_packages[i].name);
+			//printf(", name: %s",arm_packages[i].name);
 			str = strtok(NULL, "|");
 			str = strtok(NULL, "|");
 			strcpy(arm_packages[i].version,str);
-			printf(", version: %s",arm_packages[i].version);
+			//printf(", version: %s",arm_packages[i].version);
 			str = strtok(NULL, "|");
 			strcpy(arm_packages[i].link,str);
-			printf(", link: %s\n",arm_packages[i].link);
+			//printf(", link: %s\n",arm_packages[i].link);
 			i++;
 		}
 		l++;
@@ -348,6 +348,8 @@ return 0;
 }
 ////////////////////////////////////////////////////////////////
 int Actions::PacmanInit() {
+	arm_packages = new arm_packs[MAX_PKGS_FROM_ARM_FOR_USER];
+	arm_packages_full = new arm_packs_full[MAX_PKGS_FROM_ARM_TOTAL];
 
     alpm_handle = NULL;
     alpm_handle = alpm_initialize("/","/var/lib/pacman/",0);
