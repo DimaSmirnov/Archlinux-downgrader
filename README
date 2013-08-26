@@ -1,12 +1,16 @@
 Powerful program for Archlinux distribution, powered by libalpm
 Helps to downgrade packages, if last installed version is unstable.
-Works with ARM and pacman log`s
+Works with Cache, ARM and pacman log`s
 Check AUR
 
 
 --- LICENSE ---
-
 GNU General Public License
 Please see LICENSE file
 
--------------
+
+
+--- WHAT'S NEW ---
+
+ver 1.6.7-2:
+	In case of arm.connichi.com is down, using new ARM service http://repo-arm.archlinuxcn.org

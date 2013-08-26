@@ -12,7 +12,7 @@ class Actions {
 	char* IsPackageInArm(char *, char *);
 	char* ReverseString(char *);
 	int DowngradePackage(char *);
-	int GetChoiseFromArm(char *);
+	int GetChoiseForPackage(char *);
 
 	alpm_handle_t *alpm_handle;
 	alpm_db_t *db_local;
@@ -35,6 +35,8 @@ class Actions {
 		char full_path[300]; // полный адрес до пакета
 		char version[50]; // Version of package
 		char name[50]; // Name of package
+		char repository[20]; // Repository of package
+		char link[100]; //Link for download
 	}; arm_packs  *arm_packages;
 	struct  arm_packs_full{ // -- полный список пакетов в ARM
 		char full_path[300]; // полный адрес до пакета
@@ -51,29 +53,29 @@ class Actions {
 //////////////////////////////////////////////////
 int Actions::DowngradePackage(char *package) {
 	tmpchar=NULL;
-	    int isincache = Actions::IsPackageInCache(package); // Here also parsing pacman.log and using flag actions.package_never_upgraded
-	    if (isincache) {
-			if (!quiet_downgrade) printf("Downgrading from Cache, to version %s\n",install_version);
-			system(install_command); // Start downgrading from cache
-			return 0;
-		}
-		else { // ELSE Organize checking in  ARM
-			int isarmavailable = Actions::ReadArm(package);
-			if (!isarmavailable) tmpchar = Actions::IsPackageInArm(package, install_version);
-			if (tmpchar) {
-				if (!quiet_downgrade) printf("Downgrade %s from ARM to version %s\n", package,install_version);
+	int isincache = Actions::IsPackageInCache(package); // Here also parsing pacman.log and using flag actions.package_never_upgraded
+	if (isincache) {
+		if (!quiet_downgrade) printf("Downgrading from Cache, to version %s\n",install_version);
+		system(install_command); // Start downgrading from cache
+		return 0;
+	}
+	else { // ELSE Organize checking in  ARM
+		int isarmavailable = Actions::ReadArm(package);
+		if (!isarmavailable) tmpchar = Actions::IsPackageInArm(package, install_version);
+		if (tmpchar) {
+			if (!quiet_downgrade) printf("Downgrade %s from ARM to version %s\n", package,install_version);
 				strcpy(install_command,"sudo pacman -U "); strcat(install_command,tmpchar);
 				system(install_command);
 				return 0;
-			}
-			free (arm_packages);
 		}
-		if (package_never_upgraded==1) printf ("Package %s never upgraded.You can try to remove this package.\n",package); //Package never upgrades, but installed
-		else printf("Package %s not found in AUR, local cache or ARM. Terminating\n", package);
-		return 1;
+		free (arm_packages);
+	}
+	if (package_never_upgraded==1) printf ("Package %s never upgraded.You can try to remove this package.\n",package); //Package never upgrades, but installed
+	else printf("Package %s not found in AUR, local cache or ARM. Terminating\n", package);
+	return 1;
 }
 //////////////////////////////////////////////////
-int Actions::GetChoiseFromArm(char *package) {
+int Actions::GetChoiseForPackage(char *package) {
 
 		int pac_num;
 		Actions::def_pac=0;
@@ -87,12 +89,13 @@ int Actions::GetChoiseFromArm(char *package) {
 		ret = Actions::ReadArm(package);
 		ret = Actions::IsPackageInCache(package);
 		for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER;i++) {
+			if (!strlen(Actions::arm_packages[i].name)) break;
 			printf("%d: %s-%s", i, Actions::arm_packages[i].name,Actions::arm_packages[i].version);
 			if (!strcmp(Actions::arm_packages[i].version,Actions::installed_pac_ver)) printf(" [installed]\n");
 			else if (!strcmp(Actions::arm_packages[i].version,Actions::install_version)) { printf(" [will be installed by default]\n"); Actions::def_pac=i; }
 			else printf("\n");
 		}
-		printf (">> Please enter package number, [q] to quit");
+		printf (">> Please enter package number, [q] to quit ");
 		if (Actions::def_pac>0) printf(", [d] to install default package: ");
 		scanf ("%s",Actions::package_number);
 
@@ -161,7 +164,6 @@ static int curl_handler(char *data, size_t size, size_t nmemb, string *buffer) {
 	  }
 	  return result;
 }
-
 //////////////////////////////////////////////////
 int Actions::IsPackageInAur(char *package) {
 
@@ -182,7 +184,6 @@ int Actions::IsPackageInAur(char *package) {
 
 	//// Parsing AUR response
 	cJSON *root = cJSON_Parse(cont);
-
 	cJSON *item = cJSON_GetObjectItem(root,"results");
 	for (int i=0;i<cJSON_GetArraySize(item);i++) {
 		cJSON *subitem=cJSON_GetArrayItem(item,i);
@@ -196,7 +197,6 @@ int Actions::IsPackageInAur(char *package) {
 }
 ///////////////////////////////////////////////////////
 void Actions::ReadPacmanLog() {
-
 	action_counter=0;
 	char strr[3];
 	char *cstr, *p, *chop, *date, *time, *operat, *pack_name, *cur_version, *prev_version, *fake;
@@ -263,11 +263,12 @@ int Actions::ReadArm(char *package) {
 	arm_packages = new arm_packs[MAX_PKGS_FROM_ARM_FOR_USER];
 	arm_packages_full = new arm_packs_full[MAX_PKGS_FROM_ARM_TOTAL];
 
-	if(sizeof(void*) == 4) { architecture = (char *)"32";  }
-	else if (sizeof(void*) == 8) { architecture = (char *)"64"; }
+	if(sizeof(void*) == 4) { architecture = (char *)"i686";  }
+	else if (sizeof(void*) == 8) { architecture = (char *)"x86_64"; }
 
 	curl = curl_easy_init();
-	sprintf (conte,"http://arm.konnichi.com/search/raw.php?a=%s&q=^%s%24&core=1&extra=1&community=1",architecture,package);
+	//sprintf (conte,"http://arm.konnichi.com/search/raw.php?a=%s&q=^%s%24&core=1&extra=1&community=1",architecture,package);
+	sprintf (conte,"http://repo-arm.archlinuxcn.org/search?arch=%s&pkgname=%s",architecture,package);
 	curl_easy_setopt(curl, CURLOPT_URL, conte);
 	curl_easy_setopt(curl, CURLOPT_HEADER, 0);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_handler);
@@ -280,54 +281,37 @@ int Actions::ReadArm(char *package) {
 	str = strtok(content, "\n");
 	strcpy(arm_packages_full[counter2].full_path,str);
 	counter2++;
-	while(str = strtok(NULL, "\n")) {
-		if (!strstr(str,".sig")) {
-			strcpy(arm_packages_full[counter2].full_path,str);
-			counter2++;
-		}
+	for (;str = strtok(NULL, "\n"); counter2++) {
+		strcpy(arm_packages_full[counter2].full_path,str);
 	}
 	packages_in_arm = counter2;
 	counter=0;
-	while(counter<MAX_PKGS_FROM_ARM_FOR_USER) {
-		strcpy(arm_packages[counter].full_path,arm_packages_full[counter2].full_path);
-		counter++; counter2--;
+	while(counter<MAX_PKGS_FROM_ARM_FOR_USER && counter<packages_in_arm) { //counter2>=0) {
+		strcpy(arm_packages[counter].full_path,arm_packages_full[counter].full_path);
+		counter++;
 	}
-
-	for (int l=1;l<MAX_PKGS_FROM_ARM_FOR_USER;l++) { // Get info about packages in ARM: version, package name
+	int l=0, i=1;
+	while (l<MAX_PKGS_FROM_ARM_FOR_USER) { // Get info about packages in ARM
 		char full[1000];
-		char *fully = full;
-		char release[10];
-		char version[20];
+		if (!strlen(arm_packages[l].full_path)) break;
 		strcpy(full,arm_packages[l].full_path);
-		fully = ReverseString(full);
-		str = strtok(fully, ".");
-		str = strtok(NULL, ".");
-		str = strtok(NULL, ".");
-		str = strtok(NULL, "-");
-		if (strstr(str,"46_68x") || strstr(str,"686i")) { // For stupid packages in ARM :(
-			strcpy(release,strtok(NULL, "-")); // release
-			//printf("\n>>> %s\n",str); // DEBUG
-			strcpy(version,strtok(NULL, "-")); // version
-			fully = ReverseString(version);
-			strcat(fully,"-");
-			strcat(fully,release);
-			strcpy(arm_packages[l].version,fully);
-			strcpy(version,strtok(NULL, "/"));
-			fully = ReverseString(version);
-			strcpy(arm_packages[l].name,fully); // Copy name of package
+		str = strtok(full, "|");
+		if (strcmp(str,"testing")) { // Exclude packages from `testing`
+			strcpy(arm_packages[i].repository,str);
+			printf("Repo: %s",arm_packages[i].repository);
+			str = strtok(NULL, "|");
+			strcpy(arm_packages[i].name,str);
+			printf(", name: %s",arm_packages[i].name);
+			str = strtok(NULL, "|");
+			str = strtok(NULL, "|");
+			strcpy(arm_packages[i].version,str);
+			printf(", version: %s",arm_packages[i].version);
+			str = strtok(NULL, "|");
+			strcpy(arm_packages[i].link,str);
+			printf(", link: %s\n",arm_packages[i].link);
+			i++;
 		}
-		else {
-			strcpy(release,str); // release
-			strcpy(version,strtok(NULL, "-")); // version
-			fully = ReverseString(version);
-			strcat(fully,"-");
-			strcat(fully,release);
-
-			strcpy(arm_packages[l].version,fully); // Copy version of package
-			strcpy(version,strtok(NULL, "/"));
-			fully = ReverseString(version);
-			strcpy(arm_packages[l].name,fully); // Copy name of package
-		}
+		l++;
 	}
 return 0;
 }
@@ -347,16 +331,6 @@ char* Actions::IsPackageInArm(char *package, char *version) {
 	}
 	if (arm_flag==1) return arm_packages[tmpint].full_path;
 	else return NULL;
-}
-////////////////////////////////////////////////////////////////
-char* Actions::ReverseString(char *string) {
-	char t;
-	for (int i=0, j=strlen(string)-1;i<j;i++,--j) {  // Reverse string;
-        t=string[i];
-        string[i] = string[j];
-        string[j]=t;
-    }
-    return string;
 }
 ////////////////////////////////////////////////////////////////
 int Actions::CheckDowngradePossibility(char *package) {

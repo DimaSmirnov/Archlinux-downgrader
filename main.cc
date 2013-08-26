@@ -7,7 +7,7 @@
 
 #define MAX_PKGS_FROM_ARM_TOTAL 10000
 #define MAX_PKGS_FROM_ARM_FOR_USER 30
-#define VERSION "1.5.7-2"
+#define VERSION "1.6.7-2"
 
 #include <fstream>
 using namespace std;
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 				package = optarg;
 				break;
 			}
-			case 'l':{ // Show list of possible packages on downgrade
+			case 'l':{ // Show list of possible packages for downgrade
 				show_list = 1;
 				package = optarg;
 				break;
@@ -44,6 +44,7 @@ int main(int argc, char **argv) {
 				return 0;
 			}
 		}
+
 	Actions actions;
 	///////////////////////////// Show possible packages list when downgrade
 	if (show_list) {
@@ -52,7 +53,7 @@ int main(int argc, char **argv) {
 
 		printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
 		actions.show_list = show_list;
-		int ret = actions.GetChoiseFromArm(package);
+		int ret = actions.GetChoiseForPackage(package);
 		if (ret) return 1; // Выход с ошибкой
 		if (!strcmp(actions.package_number,"d")) pac_num = actions.def_pac;
 		else if (!strcmp(actions.package_number,"q")) return 0;

@@ -8,7 +8,7 @@ depends=('pacman' 'intltool' 'sudo')
 license=("GPL")
 url="https://github.com/DimaSmirnov/Archlinux-downgrader"
 source=("http://www.igus.lv/downgrader/downgrader.tar.xz")
-install=$pkgname.install
+# install=$pkgname.install
 
 build() {
   cd "$srcdir"
