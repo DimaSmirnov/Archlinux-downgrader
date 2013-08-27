@@ -37,6 +37,7 @@ class Actions {
 		char name[50]; // Name of package
 		char repository[20]; // Repository of package
 		char link[100]; //Link for download
+		char pkg_release[5]; //Package release
 	}; arm_packs  *arm_packages;
 	struct  arm_packs_full{ // -- полный список пакетов в ARM
 		char full_path[300]; // полный адрес до пакета
@@ -308,6 +309,8 @@ int Actions::ReadArm(char *package) {
 			str = strtok(NULL, "|");
 			strcpy(arm_packages[i].link,str);
 			//printf(", link: %s\n",arm_packages[i].link);
+			str = strtok(NULL, "|");
+			strcpy(arm_packages[i].pkg_release,str);
 			i++;
 		}
 		l++;
