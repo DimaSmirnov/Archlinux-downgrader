@@ -18,20 +18,20 @@ class Actions {
 	alpm_db_t *db_local;
 	alpm_pkg_t *pkg;
 	char *dbpath, *tmpchar;
-	char install_command[200]; // Команда для установки
-	char install_version[30]; // Версия пакета для установки
-	const char *installed_pac_ver;  // Текущая установленная версия
+	char install_command[200];
+	char install_version[30];
+	const char *installed_pkg_ver;
 	long int pacmanlog_length;
 	FILE *pFile, *pFile2;
-	struct  packs{ // -- Действия с пакетами из логов пакмана
-			char name[40]; // название пакета
-			char date[10]; // дата операции
-			char time[20]; // время операции
-			char action[20]; // название операции (upgraded, installed, removed)
-			char cur_version[50]; // предыдущая версия
-			char prev_version[50]; // предыдущая версия
+	struct  packs{ // -- Struct for pacman logs
+			char name[40]; // pkg name
+			char date[10]; // operation date
+			char time[20]; // operation time
+			char action[20]; // operation name(upgraded, installed, removed)
+			char cur_version[50]; // current pkg version
+			char prev_version[50]; // previously pkg version
 	}; packs  *packages;
-	struct  arm_packs{ // -- список пакетов в ARM для вывода юзеру
+	struct  arm_packs{ // -- сlist of ARM pkgs for show to user
 		char full_path[300]; // полный адрес до пакета
 		char version[50]; // Version of package
 		char name[50]; // Name of package
@@ -39,8 +39,8 @@ class Actions {
 		char link[100]; //Link for download
 		char pkg_release[5]; //Package release
 	}; arm_packs  *arm_packages;
-	struct  arm_packs_full{ // -- полный список пакетов в ARM
-		char full_path[300]; // полный адрес до пакета
+	struct  arm_packs_full{ // -- struct for full string from ARM
+		char full_path[300]; // line from arm response
 	}; arm_packs_full  *arm_packages_full;
 
 	int package_never_upgraded;
@@ -92,7 +92,7 @@ int Actions::GetChoiseForPackage(char *package) {
 		ret = Actions::IsPackageInCache(package);
 		for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER && i<=Actions::packages_in_arm;i++) {
 			printf("%d: %s-%s", i, Actions::arm_packages[i].name,Actions::arm_packages[i].version);
-			if (!strcmp(Actions::arm_packages[i].version,Actions::installed_pac_ver)) printf(" [installed]\n");
+			if (!strcmp(Actions::arm_packages[i].version,Actions::installed_pkg_ver)) printf(" [installed]\n");
 			else if (!strcmp(Actions::arm_packages[i].version,Actions::install_version)) { printf(" [will be installed by default]\n"); Actions::def_pac=i; }
 			else printf("\n");
 		}
@@ -107,9 +107,9 @@ int Actions::IsPackageInstalled(char *package) {
     const char *local;
     pkg = alpm_db_get_pkg(db_local,package);
     local = alpm_pkg_get_name(pkg);
-    if(!local) return 0;// пакет не найден в системе
+    if(!local) return 0;// package not found in system
     else {
-        installed_pac_ver = alpm_pkg_get_version(pkg); // Вывод версии пакета
+        installed_pkg_ver = alpm_pkg_get_version(pkg); // show package version
         return 1;
     }
 }
@@ -294,21 +294,16 @@ int Actions::ReadArm(char *package) {
 	while (l<MAX_PKGS_FROM_ARM_FOR_USER) { // Get info about packages in ARM
 		if (!strlen(arm_packages[l].full_path)) break;
 		strcpy(full,arm_packages[l].full_path);
-		//if (l==packages_in_arm) break;
 		str = strtok(full, "|");
 		if (strcmp(str,"testing")) { // Exclude packages from `testing`
 			strcpy(arm_packages[i].repository,str);
-			//printf("%d: Repo: %s",i, arm_packages[i].repository);
 			str = strtok(NULL, "|");
 			strcpy(arm_packages[i].name,str);
-			//printf(", name: %s",arm_packages[i].name);
 			str = strtok(NULL, "|");
 			str = strtok(NULL, "|");
 			strcpy(arm_packages[i].version,str);
-			//printf(", version: %s",arm_packages[i].version);
 			str = strtok(NULL, "|");
 			strcpy(arm_packages[i].link,str);
-			//printf(", link: %s\n",arm_packages[i].link);
 			str = strtok(NULL, "|");
 			strcpy(arm_packages[i].pkg_release,str);
 			i++;
