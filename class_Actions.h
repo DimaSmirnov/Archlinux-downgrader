@@ -24,12 +24,12 @@ class Actions {
 	long int pacmanlog_length;
 	FILE *pFile, *pFile2;
 	struct  packs{ // -- Действия с пакетами из логов пакмана
-			char name[40]; // название пакета
-			char date[10]; // дата операции
-			char time[20]; // время операции
-			char action[20]; // название операции (upgraded, installed, removed)
-			char cur_version[50]; // предыдущая версия
-			char prev_version[50]; // предыдущая версия
+		char name[40]; // название пакета
+		char date[10]; // дата операции
+		char time[20]; // время операции
+		char action[20]; // название операции (upgraded, installed, removed)
+		char cur_version[50]; // предыдущая версия
+		char prev_version[50]; // предыдущая версия
 	}; packs  *packages;
 	struct  arm_packs{ // -- список пакетов в ARM для вывода юзеру
 		char full_path[300]; // полный адрес до пакета
