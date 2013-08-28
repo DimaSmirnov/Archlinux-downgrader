@@ -23,6 +23,7 @@ class Actions {
 	const char *installed_pkg_ver;
 	long int pacmanlog_length;
 	FILE *pFile, *pFile2;
+<<<<<<< HEAD
 	struct  packs{ // -- Struct for pacman logs
 			char name[40]; // pkg name
 			char date[10]; // operation date
@@ -30,6 +31,15 @@ class Actions {
 			char action[20]; // operation name(upgraded, installed, removed)
 			char cur_version[50]; // current pkg version
 			char prev_version[50]; // previously pkg version
+=======
+	struct  packs{ // -- Действия с пакетами из логов пакмана
+		char name[40]; // название пакета
+		char date[10]; // дата операции
+		char time[20]; // время операции
+		char action[20]; // название операции (upgraded, installed, removed)
+		char cur_version[50]; // предыдущая версия
+		char prev_version[50]; // предыдущая версия
+>>>>>>> 950f076725e68e32cd5d6d1e469bf75b97839d92
 	}; packs  *packages;
 	struct  arm_packs{ // -- сlist of ARM pkgs for show to user
 		char full_path[300]; // полный адрес до пакета
@@ -158,20 +168,20 @@ int Actions::IsPackageInCache(char *package) {
 }
 //////////////////////////////////////////////////
 static int curl_handler(char *data, size_t size, size_t nmemb, string *buffer) {
-	  int result = 0;
-	  if (buffer != NULL) {
+	int result = 0;
+	if (buffer != NULL) {
 		buffer->append(data, size * nmemb);
 		result = size * nmemb;
-	  }
-	  return result;
+	}
+	return result;
 }
 //////////////////////////////////////////////////
 int Actions::IsPackageInAur(char *package) {
 
 	char *name, query[300];
 	const char *cont = conte;
-    CURL *curl;
-    CURLcode result;
+	CURL *curl;
+	CURLcode result;
 	string content;
 
 	curl = curl_easy_init();
@@ -213,43 +223,42 @@ void Actions::ReadPacmanLog() {
 
 	string line;
 	ifstream log ("/var/log/pacman.log");
-	  if (log.is_open()) {
-		while ( log.good()) { // Parsing file pacman.log
-			getline (log,line);
-			i++;
-			//printf("Line: %d\n",i); // DEBUG:
-			cstr = new char [line.size()+1];
-			strcpy (cstr, line.c_str());
-			date = strtok(cstr," ");
-			date++;
-			time = strtok(NULL,"] ");
-			fake = strtok(NULL," ");
-			operat = strtok(NULL," ");
-			pack_name = strtok(NULL," ");
+	if (log.is_open()) {
+	while ( log.good()) { // Parsing file pacman.log
+		getline (log,line);
+		i++;
+		//printf("Line: %d\n",i); // DEBUG:
+		cstr = new char [line.size()+1];
+		strcpy (cstr, line.c_str());
+		date = strtok(cstr," ");
+		date++;
+		time = strtok(NULL,"] ");
+		fake = strtok(NULL," ");
+		operat = strtok(NULL," ");
+		pack_name = strtok(NULL," ");
 
-			//printf("Line: %d, operat: %s\n",i, operat); // DEBUG:
-			if (!operat) continue;
-			if (!strcmp(operat,"upgraded")) {
-				//printf("Upgraded: %s, line: %d\n", pack_name, i+1); //DEBUG:
-				prev_version = strtok(NULL," ");
-				prev_version++;
-				cur_version = strtok(NULL," ");
-				cur_version = strtok(NULL,")");
-				strcpy(packages[action_counter].date,date);
-				strcpy(packages[action_counter].time,time);
-				strcpy(packages[action_counter].name,pack_name);
-				strcpy(packages[action_counter].action,operat);
-				strcpy(packages[action_counter].cur_version,cur_version);
-				strcpy(packages[action_counter].prev_version,prev_version);
-				action_counter++;
-				//printf ("date: %s, time: %s, operat: %s, pack_name: %s\n", date, time, operat, pack_name);
-			}
-
-			delete[] cstr;
+		//printf("Line: %d, operat: %s\n",i, operat); // DEBUG:
+		if (!operat) continue;
+		if (!strcmp(operat,"upgraded")) {
+			//printf("Upgraded: %s, line: %d\n", pack_name, i+1); //DEBUG:
+			prev_version = strtok(NULL," ");
+			prev_version++;
+			cur_version = strtok(NULL," ");
+			cur_version = strtok(NULL,")");
+			strcpy(packages[action_counter].date,date);
+			strcpy(packages[action_counter].time,time);
+			strcpy(packages[action_counter].name,pack_name);
+			strcpy(packages[action_counter].action,operat);
+			strcpy(packages[action_counter].cur_version,cur_version);
+			strcpy(packages[action_counter].prev_version,prev_version);
+			action_counter++;
+			//printf ("date: %s, time: %s, operat: %s, pack_name: %s\n", date, time, operat, pack_name);
 		}
-		log.close();
-	  }
-   pacmanlog_length = action_counter;
+		delete[] cstr;
+	}
+	log.close();
+	}
+  pacmanlog_length = action_counter;
 }
 ///////////////////////////////////////////////////////
 int Actions::ReadArm(char *package) {
