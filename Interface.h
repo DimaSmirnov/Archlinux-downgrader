@@ -1,10 +1,4 @@
-class Interface {
-	public:
-	void ShowHelpWindow();
-		////
-};
-//////////////////////////////////////////////////
-void Interface::ShowHelpWindow() {
+void ShowHelpWindow() {
 	printf("\nDowngrader, version %s (libalpm.so.8)\n",VERSION);
 	printf(" usage: downgrader [ -h ] [-q] [ -l <package name> ] <PACKAGE_NAME>\n");
 	printf("  options:\n");
