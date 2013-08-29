@@ -55,5 +55,3 @@
 	int def_pac;
 	CURL *curl;
 	CURLcode result;
-
-
