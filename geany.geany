@@ -1,0 +1,56 @@
+[indentation]
+indent_width=4
+indent_type=1
+indent_hard_tab_width=8
+detect_indent=false
+detect_indent_width=true
+indent_mode=2
+
+[project]
+name=downgrader
+base_path=/home/dima/Документы/Programming/Projects/downgrader
+description=
+file_patterns=
+
+[long line marker]
+long_line_behaviour=1
+long_line_column=72
+
+[files]
+current_page=4
+FILE_NAME_0=9974;C;0;EUTF-8;1;1;0;%2Fhome%2Fdima%2FДокументы%2FProgramming%2FProjects%2Fdowngrader%2FActions.h;0;4
+FILE_NAME_1=1011;C;0;EUTF-8;1;1;0;%2Fhome%2Fdima%2FДокументы%2FProgramming%2FProjects%2Fdowngrader%2Fmain.c;0;4
+FILE_NAME_2=308;Make;0;EUTF-8;1;1;0;%2Fhome%2Fdima%2FДокументы%2FProgramming%2FProjects%2Fdowngrader%2FMakefile;0;4
+FILE_NAME_3=2128;None;0;EUTF-8;1;1;0;%2Fhome%2Fdima%2FДокументы%2FProgramming%2FProjects%2Flibeasyconfig%2FREADME;0;4
+FILE_NAME_4=1155;C;0;EUTF-8;1;1;0;%2Fhome%2Fdima%2FДокументы%2FProgramming%2FProjects%2Fdowngrader%2Fvariables.h;0;4
+
+[VTE]
+last_dir=/home/dima/Документы/Programming/Projects
+
+[build-menu]
+EX_00_LB=_Выполнить
+EX_00_CM=./downgrader -l xorg-server
+EX_00_WD=
+NF_03_LB=Загрузить проект в AUR
+NF_03_CM=terminal -x ./internal_update.sh
+NF_03_WD=
+NF_02_LB=Создать архив с проектом
+NF_02_CM=tar --xz -cvf  downgrader.tar.xz *
+NF_02_WD=
+NF_00_LB=_Собрать
+NF_00_CM=make
+NF_00_WD=
+
+[file_prefs]
+final_new_line=true
+ensure_convert_new_lines=false
+strip_trailing_spaces=true
+replace_tabs=false
+
+[debugger]
+target=/home/dima/Документы/Programming/Projects/downgrader/downgrader
+debugger=GDB
+arguments=linux
+envvar_count=0
+watches_count=0
+breaks_count=0
