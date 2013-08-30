@@ -17,10 +17,10 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=4
+current_page=2
 FILE_NAME_0=9974;C;0;EUTF-8;1;1;0;%2Fhome%2Fdima%2FДокументы%2FProgramming%2FProjects%2Fdowngrader%2FActions.h;0;4
 FILE_NAME_1=1011;C;0;EUTF-8;1;1;0;%2Fhome%2Fdima%2FДокументы%2FProgramming%2FProjects%2Fdowngrader%2Fmain.c;0;4
-FILE_NAME_2=308;Make;0;EUTF-8;1;1;0;%2Fhome%2Fdima%2FДокументы%2FProgramming%2FProjects%2Fdowngrader%2FMakefile;0;4
+FILE_NAME_2=267;Make;0;EUTF-8;1;1;0;%2Fhome%2Fdima%2FДокументы%2FProgramming%2FProjects%2Fdowngrader%2FMakefile;0;4
 FILE_NAME_3=2128;None;0;EUTF-8;1;1;0;%2Fhome%2Fdima%2FДокументы%2FProgramming%2FProjects%2Flibeasyconfig%2FREADME;0;4
 FILE_NAME_4=1155;C;0;EUTF-8;1;1;0;%2Fhome%2Fdima%2FДокументы%2FProgramming%2FProjects%2Fdowngrader%2Fvariables.h;0;4
 
