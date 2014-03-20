@@ -226,23 +226,19 @@ int ReadArm(char *package) {
 
 	int l=0, i=1;
 	char full[1000];
-	while (l<MAX_PKGS_FROM_ARM_FOR_USER) { // Get info about packages in ARM
+	while (i<MAX_PKGS_FROM_ARM_FOR_USER) { // Get info about packages in ARM
 		if (!strlen(arm_pkgs[l].full_path)) break;
 		strcpy(full,arm_pkgs[l].full_path);
 		str = strtok(full, "|");
 		if (strcmp(str,"testing")) { // Exclude packages from `testing`
-			strcpy(arm_pkgs[i].repository,str);
-			//printf("%d: Repo: %s",i, arm_pkgs[i].repository);
+			strcpy(arm_pkgs[i].repository,str); //printf("%d: Repo: %s",i, arm_pkgs[i].repository);
 			str = strtok(NULL, "|");
-			strcpy(arm_pkgs[i].name,str);
-			//printf(", name: %s",arm_pkgs[i].name);
+			strcpy(arm_pkgs[i].name,str); //printf(", name: %s",arm_pkgs[i].name); //DEBUG
 			str = strtok(NULL, "|");
 			str = strtok(NULL, "|");
-			strcpy(arm_pkgs[i].version,str);
-			//printf(", version: %s",arm_pkgs[i].version);
+			strcpy(arm_pkgs[i].version,str); //printf(", version: %s",arm_pkgs[i].version);
 			str = strtok(NULL, "|");
-			strcpy(arm_pkgs[i].link,str);
-			//printf(", link: %s\n",arm_pkgs[i].link);
+			strcpy(arm_pkgs[i].link,str); //printf(", link: %s\n",arm_pkgs[i].link);
 			str = strtok(NULL, "|");
 			strcpy(arm_pkgs[i].pkg_release,str);
 			i++;

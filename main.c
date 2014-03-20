@@ -8,7 +8,7 @@
 #include "cJSON.h"
 
 #define MAX_PKGS_FROM_ARM_FOR_USER 30
-#define VERSION "1.7.0-3"
+#define VERSION "1.7.0-4"
 
 #include "variables.h"
 #include "Interface.h"
