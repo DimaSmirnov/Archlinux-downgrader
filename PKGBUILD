@@ -1,9 +1,9 @@
 # Author: Dmitriy Smirnov <other@igus.lv>
 pkgname=downgrader
 pkgver=1.7.0
-pkgrel=4
+pkgrel=5
 pkgdesc="Powerful packages downgrader for Archlinux. Works with libalpm, ARM and pacman logs"
-arch=('any')
+arch=('i686' 'x86_64')
 depends=('pacman' 'intltool' 'sudo')
 license=("GPL")
 url="https://github.com/DimaSmirnov/Archlinux-downgrader"
