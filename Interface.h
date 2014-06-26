@@ -5,4 +5,4 @@ void ShowHelpWindow() {
 	printf("   -h   <print this help and exit>\n");
 	printf("   -q   <quiet working, without any notifications> \n");
 	printf("   -l N   <gave a list of available packages versions for downgrade package N>\n");
-}
+} 

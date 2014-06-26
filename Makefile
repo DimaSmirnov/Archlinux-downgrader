@@ -7,3 +7,4 @@ main.o: main.c Interface.h Actions.h variables.h
 install: downgrader
 	strip -s downgrader
 	cp downgrader /usr/sbin/downgrader
+ 

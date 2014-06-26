@@ -24,7 +24,7 @@ int DowngradePackage(char *package) {
 		else printf("Package %s not found in AUR, local cache or ARM. Terminating\n", package);
 	}
 	return 1;
-}
+} 
 //////////////////////////////////////////////////
 int GetChoiseForPackage(char *package) {
 
@@ -38,6 +38,7 @@ int GetChoiseForPackage(char *package) {
 		int ret = CheckDowngradePossibility(package);
 		if (ret) return 1;
 		ret = ReadArm(package);
+		if (!ret) return 2;
 		ret = IsPackageInCache(package);
 		for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgs_in_arm;i++) {
 			printf("%d: %s-%s", i, arm_pkgs[i].name, arm_pkgs[i].version);

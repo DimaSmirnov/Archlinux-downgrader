@@ -9,7 +9,7 @@
 	char* IsPackageInArm(char *, char *);
 	int DowngradePackage(char *);
 	int GetChoiseForPackage(char *);
-
+ 
 	alpm_handle_t *alpm_handle;
 	alpm_db_t *db_local;
 	alpm_pkg_t *pkg;

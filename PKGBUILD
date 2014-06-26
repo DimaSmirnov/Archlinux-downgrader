@@ -3,7 +3,7 @@ pkgname=downgrader
 pkgver=1.7.0
 pkgrel=5
 pkgdesc="Powerful packages downgrader for Archlinux. Works with libalpm, ARM and pacman logs"
-arch=('i686' 'x86_64')
+arch=('any')
 depends=('pacman' 'intltool' 'sudo')
 license=("GPL")
 url="https://github.com/DimaSmirnov/Archlinux-downgrader"
@@ -18,8 +18,4 @@ build() {
 package() {
   cd "$srcdir"
   install -D -m755 downgrader "$pkgdir/usr/bin/downgrader"
-}
-<<<<<<< master
-
-=======
->>>>>>> local
+} 

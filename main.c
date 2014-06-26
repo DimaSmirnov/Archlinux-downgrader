@@ -8,12 +8,12 @@
 #include "cJSON.h"
 
 #define MAX_PKGS_FROM_ARM_FOR_USER 30
-#define VERSION "1.7.0-5"
+#define VERSION "1.7.0-4"
 
 #include "variables.h"
 #include "Interface.h"
 #include "Actions.h"
-
+ 
 
 int main(int argc, char **argv) {
 	char *package;
@@ -41,22 +41,21 @@ int main(int argc, char **argv) {
 		}
 	///////////////////////////// Show possible packages list when downgrade
 	if (show_list) {
-/*		
 		int def_pac = 0;
 		int pac_num;
-
+ 
 		printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
 		show_list = show_list;
 		int ret = GetChoiseForPackage(package);
-		if (ret) return 1; // exit with error
+		if (ret==1) { printf ("Sorry, internal error. Exiting\n"); return 1; }// exit with error
+		else if (ret==2) { printf ("Sorry, this feature temporary unavailable. Can`t read ARM. Exiting\n"); return 1; }
+		
 		if (!strcmp(package_number,"d")) pac_num = def_pac;
 		else if (!strcmp(package_number,"q")) return 0;
 		else pac_num = atoi(package_number);
 		strcpy(install_command,"sudo pacman -U "); strcat(install_command, arm_pkgs[pac_num].link);
 		system(install_command);
 		PacmanDeinit();
-		*/
-		printf ("Sorry, this feature temporary unavailable\n");
 		return 0;
 	}
 	//////////////////////////// Downgrade single package
