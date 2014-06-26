@@ -8,7 +8,7 @@
 #include "cJSON.h"
 
 #define MAX_PKGS_FROM_ARM_FOR_USER 30
-#define VERSION "1.7.0-4"
+#define VERSION "1.7.0-5"
 
 #include "variables.h"
 #include "Interface.h"
@@ -41,6 +41,7 @@ int main(int argc, char **argv) {
 		}
 	///////////////////////////// Show possible packages list when downgrade
 	if (show_list) {
+/*		
 		int def_pac = 0;
 		int pac_num;
 
@@ -54,6 +55,8 @@ int main(int argc, char **argv) {
 		strcpy(install_command,"sudo pacman -U "); strcat(install_command, arm_pkgs[pac_num].link);
 		system(install_command);
 		PacmanDeinit();
+		*/
+		printf ("Sorry, this feature temporary unavailable\n");
 		return 0;
 	}
 	//////////////////////////// Downgrade single package
