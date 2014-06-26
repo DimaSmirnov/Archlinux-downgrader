@@ -6,7 +6,7 @@
 	int CheckDowngradePossibility(char *);
 	void ReadPacmanLog();
 	int ReadArm(char *);
-	char* IsPackageInArm(char *, char *);
+	int IsPackageInArm(char *, char *);
 	int DowngradePackage(char *);
 	int GetChoiseForPackage(char *);
  

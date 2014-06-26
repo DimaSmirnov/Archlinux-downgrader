@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////
 int DowngradePackage(char *package) {
 	tmpchar=NULL;
+	
 	int isincache = IsPackageInCache(package); // Here also parsing pacman.log and using flag actions.package_never_upgraded
 	if (isincache) {
 		if (!quiet_downgrade) printf("Downgrading from Cache, to version %s\n",install_version);
@@ -8,20 +9,16 @@ int DowngradePackage(char *package) {
 		system(install_command); // Start downgrading from cache
 		return 0;
 	}
-	else { // ELSE Organize checking in  ARM
-		int isarmavailable = ReadArm(package);
-		if (!isarmavailable) tmpchar = IsPackageInArm(package, install_version);
-		if (tmpchar) {
-			if (!quiet_downgrade) printf("Downgrade %s from ARM to version %s\n", package,install_version);
-				strcpy(install_command,"sudo pacman -U "); strcat(install_command,tmpchar);
+	if (pkg_never_upgraded==1) {
+		strcpy(install_version,installed_pkg_ver);
+		ret = IsPackageInArm(package, install_version);
+		if (arm_pkgs[ret].link) {
+			if (!quiet_downgrade) printf("Downgrade %s from ARM to version %s\n", package,arm_pkgs[ret+2].version);
+				strcpy(install_command,"sudo pacman -U "); strcat(install_command,arm_pkgs[ret+2].link);
 				//printf ("command: %s\n",install_command); //DEBUG
 				system(install_command);
 				return 0;
 		}
-	}
-	if(!quiet_downgrade) {
-		if (pkg_never_upgraded==1) printf ("Sorry, package %s can`t be downgrade.\n",package); //Package never upgrades, but installed
-		else printf("Package %s not found in AUR, local cache or ARM. Terminating\n", package);
 	}
 	return 1;
 } 
@@ -35,21 +32,8 @@ int GetChoiseForPackage(char *package) {
 			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
 			return -1;
 		}
-		ret = IsPackageInstalled(package);
-		if (!ret) {
-			if(!quiet_downgrade) printf("Package '%s' not installed.\n", package);
-			return -1;
-		}
-		ret = IsPackageInAur(package);
-		if (ret) {
-			if(!quiet_downgrade) printf("Package '%s' in AUR. Downgrade impossible.\n", package);
-			return -1;
-		}
-		ret = ReadArm(package);
-		if (!ret) {
-			printf ("Sorry, in ARM 0 packages, or ARM temporary unavailable. Exiting\n");
-			return -1;
-		}
+		ret = CheckDowngradePossibility(package);
+		if (ret<0) return -1;
 		ret = IsPackageInCache(package);
 		for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgs_in_arm;i++) {
 			printf("%d: %s-%s", i, arm_pkgs[i].name, arm_pkgs[i].version);
@@ -73,6 +57,29 @@ int IsPackageInstalled(char *package) {
         installed_pkg_ver = alpm_pkg_get_version(pkg); // show pkg version
         return 1;
     }
+}
+///////////////////////////////////////////////////
+int CheckDowngradePossibility(char *package) {
+		int ret;
+		ret = IsPackageInstalled(package);
+		if (!ret) {
+			if(!quiet_downgrade) printf("Package '%s' not installed.\n", package);
+			return -1;
+		}
+		ret = IsPackageInAur(package);
+		if (ret>0) { // Package in aur
+			if(!quiet_downgrade) printf("Package '%s' in AUR. Downgrade impossible.\n", package);
+			return -1;
+		}
+		else if(ret<0) { // inet connection error
+			printf ("Please check you internet connection. Error 1\n");
+			return -1;
+		}	
+		ret = ReadArm(package);
+		if (!ret) {
+			printf ("Sorry, in ARM 0 packages, or ARM temporary unavailable. Downgrade impossible.\n");
+			return -1;
+		}
 }
 //////////////////////////////////////////////////
 int IsPackageInCache(char *package) {
@@ -136,7 +143,7 @@ int IsPackageInAur(char *package) {
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 	result = curl_easy_perform(curl);
-
+	if(result != CURLE_OK) return -1; // Exit with error
 	//// Parsing AUR response
 	cJSON *root = cJSON_Parse(chunk.memory);
 	cJSON *item = cJSON_GetObjectItem(root,"results");
@@ -207,7 +214,7 @@ int ReadArm(char *package) {
 
 	char  *str, *last, *architecture, *pointer;
 	int counter, counter2;
-
+	
 	if(sizeof(void*) == 4) { architecture = (char *)"i686";  }
 	else if (sizeof(void*) == 8) { architecture = (char *)"x86_64"; }
 
@@ -222,9 +229,12 @@ int ReadArm(char *package) {
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_handler);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
 	result = curl_easy_perform(curl);
+	if(result != CURLE_OK) {
+		printf ("Please check you internet connection. Error 2\n");
+		return -1; // Exit with error
+	}		
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
-
 	counter2=0;
 	pointer = chunk.memory;
 	str = strtok(pointer, "\n");
@@ -233,6 +243,7 @@ int ReadArm(char *package) {
 	for (;str = strtok(NULL, "\n"); counter2++) {
 		strcpy(arm_pkgs[counter2].full_path,str);
 	}
+	
 	pkgs_in_arm = counter2;
 	counter=0;
 
@@ -258,7 +269,7 @@ int ReadArm(char *package) {
 		l++;
 	}
 	pkgs_in_arm = i-1; // finally packages q-ty in ARM
-	if(!quiet_downgrade) printf("Packages in ARM: %d\n",pkgs_in_arm);
+	//if(!quiet_downgrade) printf("Packages in ARM: %d\n",pkgs_in_arm);
 
 	if(chunk.memory) free(chunk.memory);
 
@@ -266,19 +277,20 @@ return pkgs_in_arm;
 //return 0;
 }
 ////////////////////////////////////////////////////////////////
-char* IsPackageInArm(char *package, char *version) {
+int IsPackageInArm(char *package, char *version) {
 	int arm_flag=0;
 	char t_pack[100];
 	sprintf(t_pack,"%s-%s",package,version);
 	for(tmpint=0;strlen(arm_pkgs[tmpint].full_path)>0;tmpint++) {
-		//printf("%s\n",arm_packages[tmpint].full_path); // DEBUG
+		//printf("%s\n",arm_pkgs[tmpint].full_path); // DEBUG
+		//printf("%s\n",t_pack); // DEBUG
 		if (strstr(arm_pkgs[tmpint].full_path,t_pack)) {
 			arm_flag=1;
 			break;
 		}
 	}
-	if (arm_flag==1) return arm_pkgs[tmpint].link;
-	else return NULL;
+	if (arm_flag==1) return tmpint;
+	else return 0;
 }
 ////////////////////////////////////////////////////////////////
 int PacmanInit() {

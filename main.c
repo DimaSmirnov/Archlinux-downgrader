@@ -8,7 +8,7 @@
 #include "cJSON.h"
 
 #define MAX_PKGS_FROM_ARM_FOR_USER 30
-#define VERSION "1.7.0-4"
+#define VERSION "1.8.0-1"
 
 #include "variables.h"
 #include "Interface.h"
@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 		printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
 		show_list = show_list;
 		int ret = GetChoiseForPackage(package);
-		if (!ret) return 0;
+		if (ret<0) return 0;
 		
 		if (!strcmp(package_number,"d")) pac_num = def_pac;
 		else if (!strcmp(package_number,"q")) return 0;
@@ -65,16 +65,8 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 		if(!quiet_downgrade) printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
-		ret = IsPackageInstalled(package);
-		if (!ret) {
-			if(!quiet_downgrade) printf("Package '%s' not installed.\n", package);
-			return 1;
-		}
-		ret = IsPackageInAur(package);
-		if (ret) {
-			if(!quiet_downgrade) printf("Package '%s' in AUR. Downgrade impossible.\n", package);
-			return 1;
-		}
+		ret = CheckDowngradePossibility(package);
+		if (ret<0) return 0;
 		if (!quiet_downgrade) printf ("Installed version: %s\n",installed_pkg_ver);
 		int down_result = DowngradePackage(package);
 		PacmanDeinit();
