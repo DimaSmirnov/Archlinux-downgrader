@@ -47,7 +47,7 @@
 	struct curl_MemoryStruct chunk;
 
 
-	int pkg_never_upgraded;
+	int pkg_never_upgraded, ret;
 	int action_counter;
 	int pkgs_in_arm;
 	int tmpint, debug, show_list, quiet_downgrade;

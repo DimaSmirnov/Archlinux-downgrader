@@ -30,15 +30,26 @@ int GetChoiseForPackage(char *package) {
 
 		int pac_num;
 		def_pac=0;
-		int ispacmaninit = PacmanInit();
-	    if (ispacmaninit) {
+		ret = PacmanInit();
+	    if (ret) {
 			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
-			return 1;
+			return -1;
 		}
-		int ret = CheckDowngradePossibility(package);
-		if (ret) return 1;
+		ret = IsPackageInstalled(package);
+		if (!ret) {
+			if(!quiet_downgrade) printf("Package '%s' not installed.\n", package);
+			return -1;
+		}
+		ret = IsPackageInAur(package);
+		if (ret) {
+			if(!quiet_downgrade) printf("Package '%s' in AUR. Downgrade impossible.\n", package);
+			return -1;
+		}
 		ret = ReadArm(package);
-		if (!ret) return 2;
+		if (!ret) {
+			printf ("Sorry, in ARM 0 packages, or ARM temporary unavailable. Exiting\n");
+			return -1;
+		}
 		ret = IsPackageInCache(package);
 		for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgs_in_arm;i++) {
 			printf("%d: %s-%s", i, arm_pkgs[i].name, arm_pkgs[i].version);
@@ -251,7 +262,8 @@ int ReadArm(char *package) {
 
 	if(chunk.memory) free(chunk.memory);
 
-return 0;
+return pkgs_in_arm;
+//return 0;
 }
 ////////////////////////////////////////////////////////////////
 char* IsPackageInArm(char *package, char *version) {
@@ -267,20 +279,6 @@ char* IsPackageInArm(char *package, char *version) {
 	}
 	if (arm_flag==1) return arm_pkgs[tmpint].link;
 	else return NULL;
-}
-////////////////////////////////////////////////////////////////
-int CheckDowngradePossibility(char *package) {
-	int isinstalled = IsPackageInstalled(package);
-	if (!isinstalled) {
-		if(!quiet_downgrade) printf("Package '%s' not installed.\n", package);
-		return 1;
-	}
-	int isinaur = IsPackageInAur(package);
-	if (isinaur) {
-		if(!quiet_downgrade) printf("Package '%s' in AUR. Downgrade impossible.\n", package);
-		return 1;
-	}
-return 0;
 }
 ////////////////////////////////////////////////////////////////
 int PacmanInit() {

@@ -47,8 +47,9 @@ int main(int argc, char **argv) {
 		printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
 		show_list = show_list;
 		int ret = GetChoiseForPackage(package);
-		if (ret==1) { printf ("Sorry, internal error. Exiting\n"); return 1; }// exit with error
-		else if (ret==2) { printf ("Sorry, this feature temporary unavailable. Can`t read ARM. Exiting\n"); return 1; }
+		if (!ret) return 0;
+		//if (ret==1) { printf ("Sorry, internal error. Exiting\n"); return 1; }// exit with error
+		//if (!ret) { printf ("Sorry, in ARM 0 packages, or ARM temporary unavailable. Exiting\n"); return 1; }
 		
 		if (!strcmp(package_number,"d")) pac_num = def_pac;
 		else if (!strcmp(package_number,"q")) return 0;
@@ -66,8 +67,17 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 		if(!quiet_downgrade) printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
-		int ret = CheckDowngradePossibility(package);
-		if (ret) return 1;
+		ret = IsPackageInstalled(package);
+		if (!ret) {
+			if(!quiet_downgrade) printf("Package '%s' not installed.\n", package);
+			return 1;
+		}
+		ret = IsPackageInAur(package);
+		if (ret) {
+			if(!quiet_downgrade) printf("Package '%s' in AUR. Downgrade impossible.\n", package);
+			return 1;
+		}
+		//if (ret) return 1;
 		if (!quiet_downgrade) printf ("Installed version: %s\n",installed_pkg_ver);
 		int down_result = DowngradePackage(package);
 		PacmanDeinit();
