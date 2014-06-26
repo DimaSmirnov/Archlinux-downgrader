@@ -19,4 +19,7 @@ package() {
   cd "$srcdir"
   install -D -m755 downgrader "$pkgdir/usr/bin/downgrader"
 }
+<<<<<<< master
 
+=======
+>>>>>>> local
