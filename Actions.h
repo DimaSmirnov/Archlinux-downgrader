@@ -3,7 +3,7 @@ int DowngradePackage(char *package) {
 	tmpchar=NULL;
 	
 	int isincache = IsPackageInCache(package); // Here also parsing pacman.log and using flag actions.package_never_upgraded
-	printf ("IsPackageInCache checked\n"); //DEBUG
+	//printf ("IsPackageInCache checked\n"); //DEBUG
 	if (isincache) {
 		if (!quiet_downgrade) printf("Downgrading from Cache, to version %s\n",install_version);
 		//printf ("command: %s\n",install_command); //DEBUG
@@ -82,7 +82,7 @@ int CheckDowngradePossibility(char *package) {
 			printf ("Sorry, in ARM 0 packages, or ARM temporary unavailable. Downgrade impossible.\n");
 			return -1;
 		}
-		printf ("Downgrade possibility checked\n"); //DEBUG
+		//printf ("Downgrade possibility checked\n"); //DEBUG
 		return 0;
 }
 //////////////////////////////////////////////////
@@ -110,17 +110,14 @@ int IsPackageInCache(char *package) {
 	//printf("1: %s\n",full_path_to_packet); //DEBUG
 	strcpy(install_version,pkgs[pacmanlog_length].prev_version);
 	//printf("2: %s\n",full_path_to_packet); //DEBUG
-	//pFile=fopen(full_path_to_packet,"r");
-	//printf("3: %s\n",full_path_to_packet); //DEBUG
-	//if (pFile) {  // previously version available in cache
-	//	fclose(pFile);
+	if(access(full_path_to_packet, F_OK) != -1) { // previously version available in cache
 		strcpy(command,"sudo pacman -U "); // install
 		strcat(command,full_path_to_packet);
 		strcpy(install_command,command);
-		printf("install_command: %s\n",install_command); //DEBUG
+		//printf("install_command: %s\n",install_command); //DEBUG
 		return 1;
-	//}
-	//else return 0;
+	}
+	else return 0;
 }
 //////////////////////////////////////////////////
 static size_t curl_handler(char *data, size_t size, size_t nmemb, void *userp) {
@@ -184,7 +181,7 @@ void ReadPacmanLog() {
 	}
 	rewind(pFile);
 
-	pkgs = realloc(pkgs, (action_counter+1) * sizeof(struct packs));
+	pkgs = realloc(pkgs, action_counter * sizeof(struct packs));
 
 	action_counter=0;
 	while (!feof(pFile)) {  // Count lines q-ty in pacman.log
@@ -199,7 +196,6 @@ void ReadPacmanLog() {
 		if (!operat) continue;
 		if (!strcmp(operat,"upgraded")) {
 			//printf("Upgraded: %s, line: %d\n", pack_name, i+1); //DEBUG:
-
 			prev_version = strtok(NULL," ");
 			prev_version++;
 			cur_version = strtok(NULL," ");
@@ -279,7 +275,7 @@ int ReadArm(char *package) {
 		l++;
 	}
 	pkgs_in_arm = i-1; // finally packages q-ty in ARM
-	if(!quiet_downgrade) printf("Packages in ARM: %d\n",pkgs_in_arm); // DEBUG
+	//if(!quiet_downgrade) printf("Packages in ARM: %d\n",pkgs_in_arm); // DEBUG
 
 	if(chunk.memory) free(chunk.memory);
 
@@ -292,7 +288,7 @@ int IsPackageInArm(char *package, char *version) {
 	char t_pack[100];
 	sprintf(t_pack,"%s-%s",package,version);
 	for(tmpint=0;strlen(arm_pkgs[tmpint].full_path)>0;tmpint++) {
-		printf("%s\n",arm_pkgs[tmpint].full_path); // DEBUG
+		//printf("%s\n",arm_pkgs[tmpint].full_path); // DEBUG
 		//printf("%s\n",t_pack); // DEBUG
 		if (strstr(arm_pkgs[tmpint].full_path,t_pack)) {
 			arm_flag=1;
@@ -307,7 +303,7 @@ int PacmanInit() {
 
 	pkgs = calloc(1, sizeof(struct packs));
 	arm_pkgs = calloc(1, sizeof(struct arm_packs));
-	arm_pkgs = realloc(arm_pkgs, (MAX_PKGS_FROM_ARM_FOR_USER+5)*sizeof(struct arm_packs));
+	arm_pkgs = realloc(arm_pkgs, MAX_PKGS_FROM_ARM_FOR_USER*sizeof(struct arm_packs));
 
     alpm_handle = NULL;
     alpm_handle = alpm_initialize("/","/var/lib/pacman/",0);
@@ -321,7 +317,9 @@ int PacmanInit() {
     return 0;
 }
 int PacmanDeinit() {
-	free(pkgs);
-	free(arm_pkgs);
-	alpm_release(alpm_handle);
+	// TEMPORARY DISABLES, UNTIL glibc is cleared
+	//free(pkgs);
+	//free(arm_pkgs);
+	//alpm_release(alpm_handle);
+	return 0;
 }
