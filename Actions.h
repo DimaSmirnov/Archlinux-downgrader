@@ -3,6 +3,7 @@ int DowngradePackage(char *package) {
 	tmpchar=NULL;
 	
 	int isincache = IsPackageInCache(package); // Here also parsing pacman.log and using flag actions.package_never_upgraded
+	printf ("IsPackageInCache checked\n"); //DEBUG
 	if (isincache) {
 		if (!quiet_downgrade) printf("Downgrading from Cache, to version %s\n",install_version);
 		//printf ("command: %s\n",install_command); //DEBUG
@@ -33,6 +34,7 @@ int GetChoiseForPackage(char *package) {
 			return -1;
 		}
 		ret = CheckDowngradePossibility(package);
+		//printf ("Downgrade possibility checked\n"); //DEBUG
 		if (ret<0) return -1;
 		ret = IsPackageInCache(package);
 		for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgs_in_arm;i++) {
@@ -80,10 +82,12 @@ int CheckDowngradePossibility(char *package) {
 			printf ("Sorry, in ARM 0 packages, or ARM temporary unavailable. Downgrade impossible.\n");
 			return -1;
 		}
+		printf ("Downgrade possibility checked\n"); //DEBUG
+		return 0;
 }
 //////////////////////////////////////////////////
 int IsPackageInCache(char *package) {
-	char *architecture,  full_path_to_packet[200], command[100];
+	char *architecture,  full_path_to_packet[300], command[200];
 	if(sizeof(void*) == 4) architecture = (char *)"i686";
 	else if (sizeof(void*) == 8) architecture = (char *)"x86_64";
 	pkg_never_upgraded = 1;
@@ -97,21 +101,26 @@ int IsPackageInCache(char *package) {
 				strcat (full_path_to_packet,"-");
 				strcat (full_path_to_packet,architecture);
 				strcat (full_path_to_packet,".pkg.tar.xz");
+				//printf("%s\n",full_path_to_packet); //DEBUG
 				pkg_never_upgraded = 0; // Package upgraded at least 1 time
 				break;
 			}
 		}
 	}
+	//printf("1: %s\n",full_path_to_packet); //DEBUG
 	strcpy(install_version,pkgs[pacmanlog_length].prev_version);
-	pFile=fopen(full_path_to_packet,"r");
-	if (pFile) {  // previously version available in cache
+	//printf("2: %s\n",full_path_to_packet); //DEBUG
+	//pFile=fopen(full_path_to_packet,"r");
+	//printf("3: %s\n",full_path_to_packet); //DEBUG
+	//if (pFile) {  // previously version available in cache
+	//	fclose(pFile);
 		strcpy(command,"sudo pacman -U "); // install
 		strcat(command,full_path_to_packet);
 		strcpy(install_command,command);
-		fclose(pFile);
+		printf("install_command: %s\n",install_command); //DEBUG
 		return 1;
-	}
-	else return 0;
+	//}
+	//else return 0;
 }
 //////////////////////////////////////////////////
 static size_t curl_handler(char *data, size_t size, size_t nmemb, void *userp) {
@@ -129,7 +138,7 @@ static size_t curl_handler(char *data, size_t size, size_t nmemb, void *userp) {
 int IsPackageInAur(char *package) {
 
 	char *name, query[300];
-	const char *cont = conte;
+	//const char *cont = conte;
 
 	chunk.memory = malloc(1);
 	chunk.size = 0;
@@ -220,12 +229,12 @@ int ReadArm(char *package) {
 
 	chunk.memory = malloc(1);
 	chunk.size = 0;
-
+	//printf ("Memory init\n"); //DEBUG
 	curl_global_init(CURL_GLOBAL_ALL);
 	curl = curl_easy_init();
 	//sprintf (conte,"http://arm.konnichi.com/search/raw.php?a=%s&q=^%s%24&core=1&extra=1&community=1",architecture,package);
-	sprintf (conte,"http://repo-arm.archlinuxcn.org/search?arch=%s&pkgname=%s",architecture,package);
-	curl_easy_setopt(curl, CURLOPT_URL, conte);
+	sprintf (tmp_string,"http://repo-arm.archlinuxcn.org/search?arch=%s&pkgname=%s",architecture,package);
+	curl_easy_setopt(curl, CURLOPT_URL, tmp_string);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_handler);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
 	result = curl_easy_perform(curl);
@@ -254,7 +263,8 @@ int ReadArm(char *package) {
 		strcpy(full,arm_pkgs[l].full_path);
 		str = strtok(full, "|");
 		if (strcmp(str,"testing")) { // Exclude packages from `testing`
-			strcpy(arm_pkgs[i].repository,str); //printf("%d: Repo: %s",i, arm_pkgs[i].repository);
+			strcpy(arm_pkgs[i].repository,str); 
+			//printf("%d: Repo: %s",i, arm_pkgs[i].repository); // DEBUG
 			str = strtok(NULL, "|");
 			strcpy(arm_pkgs[i].name,str); //printf(", name: %s",arm_pkgs[i].name); //DEBUG
 			str = strtok(NULL, "|");
@@ -269,7 +279,7 @@ int ReadArm(char *package) {
 		l++;
 	}
 	pkgs_in_arm = i-1; // finally packages q-ty in ARM
-	//if(!quiet_downgrade) printf("Packages in ARM: %d\n",pkgs_in_arm);
+	if(!quiet_downgrade) printf("Packages in ARM: %d\n",pkgs_in_arm); // DEBUG
 
 	if(chunk.memory) free(chunk.memory);
 
@@ -282,7 +292,7 @@ int IsPackageInArm(char *package, char *version) {
 	char t_pack[100];
 	sprintf(t_pack,"%s-%s",package,version);
 	for(tmpint=0;strlen(arm_pkgs[tmpint].full_path)>0;tmpint++) {
-		//printf("%s\n",arm_pkgs[tmpint].full_path); // DEBUG
+		printf("%s\n",arm_pkgs[tmpint].full_path); // DEBUG
 		//printf("%s\n",t_pack); // DEBUG
 		if (strstr(arm_pkgs[tmpint].full_path,t_pack)) {
 			arm_flag=1;
@@ -297,7 +307,7 @@ int PacmanInit() {
 
 	pkgs = calloc(1, sizeof(struct packs));
 	arm_pkgs = calloc(1, sizeof(struct arm_packs));
-	arm_pkgs = realloc(arm_pkgs, MAX_PKGS_FROM_ARM_FOR_USER*sizeof(struct arm_packs));
+	arm_pkgs = realloc(arm_pkgs, (MAX_PKGS_FROM_ARM_FOR_USER+5)*sizeof(struct arm_packs));
 
     alpm_handle = NULL;
     alpm_handle = alpm_initialize("/","/var/lib/pacman/",0);

@@ -14,7 +14,8 @@
 	alpm_db_t *db_local;
 	alpm_pkg_t *pkg;
 	char *dbpath, *tmpchar;
-	char install_command[200]; // Команда для установки
+	char tmp_string[200];
+	char install_command[300]; // Команда для установки
 	char install_version[30]; // Версия пакета для установки
 	const char *installed_pkg_ver;  // Текущая установленная версия
 	long int pacmanlog_length;
@@ -51,7 +52,7 @@
 	int action_counter;
 	int pkgs_in_arm;
 	int tmpint, debug, show_list, quiet_downgrade;
-	char package_number[2], conte[800000];
+	char package_number[2];
 	int def_pac;
 	CURL *curl;
 	CURLcode result;
