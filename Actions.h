@@ -7,7 +7,7 @@ int DowngradePackage(char *package) {
 	if (isincache) {
 		if (!quiet_downgrade) printf("Downgrading from Cache, to version %s\n",install_version);
 		//printf ("command: %s\n",install_command); //DEBUG
-		system(install_command); // Start downgrading from cache
+		system(install_command);
 		return 0;
 	}
 	if (pkg_never_upgraded==1) {
@@ -27,7 +27,7 @@ int DowngradePackage(char *package) {
 int GetChoiseForPackage(char *package) {
 
 		int pac_num;
-		def_pac=0;
+		tmpint=0;
 		ret = PacmanInit();
 	    if (ret) {
 			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
@@ -40,11 +40,11 @@ int GetChoiseForPackage(char *package) {
 		for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgs_in_arm;i++) {
 			printf("%d: %s-%s", i, arm_pkgs[i].name, arm_pkgs[i].version);
 			if (!strcmp(arm_pkgs[i].version, installed_pkg_ver)) printf(" [installed]\n");
-			else if (!strcmp(arm_pkgs[i].version, install_version)) { printf(" [will be installed by default]\n"); def_pac=i; }
+			else if (!strcmp(arm_pkgs[i].version, install_version)) { printf(" [will be installed by default]\n"); tmpint=i; }
 			else printf("\n");
 		}
 		printf (">> Please enter package number, [q] to quit ");
-		if (def_pac>0) printf(", [d] to install default package: ");
+		if (tmpint>0) printf(", [d] to install default package: ");
 		scanf ("%s",package_number);
 
 		return 0;
@@ -54,15 +54,15 @@ int IsPackageInstalled(char *package) {
     const char *local;
     pkg = alpm_db_get_pkg(db_local,package);
     local = alpm_pkg_get_name(pkg);
-    if(!local) return 0;// pkg not found in system
+    if(!local) return 0; // pkg not found in system
     else {
-        installed_pkg_ver = alpm_pkg_get_version(pkg); // show pkg version
+        installed_pkg_ver = alpm_pkg_get_version(pkg);
         return 1;
     }
 }
 ///////////////////////////////////////////////////
 int CheckDowngradePossibility(char *package) {
-		int ret;
+
 		ret = IsPackageInstalled(package);
 		if (!ret) {
 			if(!quiet_downgrade) printf("Package '%s' not installed.\n", package);
@@ -87,9 +87,10 @@ int CheckDowngradePossibility(char *package) {
 }
 //////////////////////////////////////////////////
 int IsPackageInCache(char *package) {
-	char *architecture,  full_path_to_packet[300], command[200];
-	if(sizeof(void*) == 4) architecture = (char *)"i686";
-	else if (sizeof(void*) == 8) architecture = (char *)"x86_64";
+
+	char full_path_to_packet[300];
+	if(sizeof(void*) == 4) tmpchar = (char *)"i686"; // architecture,  
+	else if (sizeof(void*) == 8) tmpchar = (char *)"x86_64";
 	pkg_never_upgraded = 1;
 	for (;pacmanlog_length>0;pacmanlog_length--) {
 		if (!strcmp(package,pkgs[pacmanlog_length].name) && !strcmp("upgraded",pkgs[pacmanlog_length].action)) { // found necessary package
@@ -99,7 +100,7 @@ int IsPackageInCache(char *package) {
 				strcat (full_path_to_packet,"-");
 				strcat (full_path_to_packet,pkgs[pacmanlog_length].prev_version);
 				strcat (full_path_to_packet,"-");
-				strcat (full_path_to_packet,architecture);
+				strcat (full_path_to_packet,tmpchar);
 				strcat (full_path_to_packet,".pkg.tar.xz");
 				//printf("%s\n",full_path_to_packet); //DEBUG
 				pkg_never_upgraded = 0; // Package upgraded at least 1 time
@@ -111,9 +112,9 @@ int IsPackageInCache(char *package) {
 	strcpy(install_version,pkgs[pacmanlog_length].prev_version);
 	//printf("2: %s\n",full_path_to_packet); //DEBUG
 	if(access(full_path_to_packet, F_OK) != -1) { // previously version available in cache
-		strcpy(command,"sudo pacman -U "); // install
-		strcat(command,full_path_to_packet);
-		strcpy(install_command,command);
+		strcpy(tmp_string,"sudo pacman -U "); // install
+		strcat(tmp_string,full_path_to_packet);
+		strcpy(install_command,tmp_string);
 		//printf("install_command: %s\n",install_command); //DEBUG
 		return 1;
 	}
@@ -134,17 +135,12 @@ static size_t curl_handler(char *data, size_t size, size_t nmemb, void *userp) {
 //////////////////////////////////////////////////
 int IsPackageInAur(char *package) {
 
-	char *name, query[300];
-	//const char *cont = conte;
-
 	chunk.memory = malloc(1);
 	chunk.size = 0;
-
 	curl_global_init(CURL_GLOBAL_ALL);
-
 	curl = curl_easy_init();
-	sprintf(query,"https://aur.archlinux.org/rpc.php?type=search&arg=%s",package);
-	curl_easy_setopt(curl, CURLOPT_URL, query);
+	sprintf(tmp_string,"https://aur.archlinux.org/rpc.php?type=search&arg=%s",package);
+	curl_easy_setopt(curl, CURLOPT_URL, tmp_string);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_handler);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
@@ -155,8 +151,8 @@ int IsPackageInAur(char *package) {
 	cJSON *item = cJSON_GetObjectItem(root,"results");
 	for (int i=0;i<cJSON_GetArraySize(item);i++) {
 		cJSON *subitem=cJSON_GetArrayItem(item,i);
-		name = cJSON_GetObjectItem(subitem,"Name")->valuestring;
-		if (!strcmp(name,package)) return 1; // package in AUR
+		tmpchar= cJSON_GetObjectItem(subitem,"Name")->valuestring;
+		if (!strcmp(tmpchar,package)) return 1; // package in AUR
 	}
 	cJSON_Delete(root);
 
@@ -168,7 +164,7 @@ int IsPackageInAur(char *package) {
 ///////////////////////////////////////////////////////
 void ReadPacmanLog() {
 
-	action_counter=0;
+	loglines_counter=0;
 	char *buff = NULL;
 	size_t len;
 	char *date, *time, *operat, *pack_name, *cur_version, *prev_version, *fake;
@@ -177,13 +173,13 @@ void ReadPacmanLog() {
 	pFile=fopen("/var/log/pacman.log","r");
 	while (!feof(pFile)) {  // Count lines q-ty in pacman.log
 		getline(&buff, &len, pFile);
-		action_counter++;
+		loglines_counter++;
 	}
 	rewind(pFile);
 
-	pkgs = realloc(pkgs, action_counter * sizeof(struct packs));
+	pkgs = realloc(pkgs, loglines_counter * sizeof(struct packs));
 
-	action_counter=0;
+	loglines_counter=0;
 	while (!feof(pFile)) {  // Count lines q-ty in pacman.log
 		getline(&buff, &len, pFile);
 		date = strtok(buff," ");
@@ -200,19 +196,19 @@ void ReadPacmanLog() {
 			prev_version++;
 			cur_version = strtok(NULL," ");
 			cur_version = strtok(NULL,")");
-			strcpy(pkgs[action_counter].date,date);
-			strcpy(pkgs[action_counter].time,time);
-			strcpy(pkgs[action_counter].name,pack_name);
-			strcpy(pkgs[action_counter].action,operat);
-			strcpy(pkgs[action_counter].cur_version,cur_version);
-			strcpy(pkgs[action_counter].prev_version,prev_version);
-			action_counter++;
+			strcpy(pkgs[loglines_counter].date,date);
+			strcpy(pkgs[loglines_counter].time,time);
+			strcpy(pkgs[loglines_counter].name,pack_name);
+			strcpy(pkgs[loglines_counter].action,operat);
+			strcpy(pkgs[loglines_counter].cur_version,cur_version);
+			strcpy(pkgs[loglines_counter].prev_version,prev_version);
+			loglines_counter++;
 			//printf ("date: %s, time: %s, operat: %s, pack_name: %s\n", date, time, operat, pack_name); //DEBUG
 		}
 		i++;
 	}
 	fclose(pFile);
-	pacmanlog_length = action_counter;
+	pacmanlog_length =loglines_counter;
 }
 ///////////////////////////////////////////////////////
 int ReadArm(char *package) {
@@ -317,7 +313,7 @@ int PacmanInit() {
     return 0;
 }
 int PacmanDeinit() {
-	// TEMPORARY DISABLES, UNTIL glibc is cleared
+// Until situation with glibc stays unclear, I disable temporary freeing memory, after execution complete. 
 	//free(pkgs);
 	//free(arm_pkgs);
 	//alpm_release(alpm_handle);

@@ -47,12 +47,10 @@
 	};
 	struct curl_MemoryStruct chunk;
 
-
-	int pkg_never_upgraded, ret;
-	int action_counter;
-	int pkgs_in_arm;
-	int tmpint, debug, show_list, quiet_downgrade;
+	int pkg_never_upgraded, ret, loglines_counter;
+	int pkgs_in_arm, tmpint;
+	int debug, show_list, quiet_downgrade;
 	char package_number[2];
-	int def_pac;
+
 	CURL *curl;
 	CURLcode result;

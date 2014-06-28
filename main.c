@@ -64,13 +64,11 @@ int main(int argc, char **argv) {
 		}
 		if(!quiet_downgrade) printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
 		ret = CheckDowngradePossibility(package);
+		if (ret<0) return 0;
 		
-		//if (ret<0) return 0;
 		if (!quiet_downgrade) printf ("Installed version: %s\n",installed_pkg_ver);
 		int down_result = DowngradePackage(package);
 	}
 	PacmanDeinit();
 	return 0;	
-	/////////////////////////// Else return with nonnull
-	//else return 1;
 }
