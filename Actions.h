@@ -313,9 +313,8 @@ int PacmanInit() {
     return 0;
 }
 int PacmanDeinit() {
-// Until situation with glibc stays unclear, I disable temporary freeing memory, after execution complete. 
-	//free(pkgs);
-	//free(arm_pkgs);
-	//alpm_release(alpm_handle);
+	free(pkgs);
+	free(arm_pkgs);
+	alpm_release(alpm_handle);
 	return 0;
 }

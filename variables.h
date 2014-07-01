@@ -14,7 +14,7 @@
 	alpm_db_t *db_local;
 	alpm_pkg_t *pkg;
 	char *dbpath, *tmpchar;
-	char tmp_string[200];
+	char tmp_string[200], package_number[2];
 	char install_command[300]; // Команда для установки
 	char install_version[30]; // Версия пакета для установки
 	const char *installed_pkg_ver;  // Текущая установленная версия
@@ -46,11 +46,9 @@
 		size_t size;
 	};
 	struct curl_MemoryStruct chunk;
+	CURL *curl;
+	CURLcode result;
 
 	int pkg_never_upgraded, ret, loglines_counter;
 	int pkgs_in_arm, tmpint;
 	int debug, show_list, quiet_downgrade;
-	char package_number[2];
-
-	CURL *curl;
-	CURLcode result;
