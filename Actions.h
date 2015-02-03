@@ -1,4 +1,3 @@
-//////////////////////////////////////////////////
 int DowngradePackage(char *package) {
 	tmpchar=NULL;
 	
@@ -22,36 +21,34 @@ int DowngradePackage(char *package) {
 		}
 	}
 	return 1;
-} 
-//////////////////////////////////////////////////
-int GetChoiseForPackage(char *package) {
-
-		int pac_num;
-		tmpint=0;
-		ret = PacmanInit();
-	    if (ret) {
-			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
-			return -1;
-		}
-		ret = CheckDowngradePossibility(package);
-		//printf ("Downgrade possibility checked\n"); //DEBUG
-		if (ret<0) return -1;
-		ret = IsPackageInCache(package);
-		for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgs_in_arm;i++) {
-			printf("%d: %s-%s", i, arm_pkgs[i].name, arm_pkgs[i].version);
-			if (!strcmp(arm_pkgs[i].version, installed_pkg_ver)) printf(" [installed]\n");
-			else if (!strcmp(arm_pkgs[i].version, install_version)) { printf(" [will be installed by default]\n"); tmpint=i; }
-			else printf("\n");
-		}
-		printf (">> Please enter package number, [q] to quit ");
-		if (tmpint>0) printf(", [d] to install default package: ");
-		scanf ("%s",package_number);
-
-		return 0;
 }
-//////////////////////////////////////////////////
+int GetChoiseForPackage(char *package) {
+	int pac_num;
+	
+	tmpint=0;
+	ret = PacmanInit();
+    if (ret) {
+		if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
+		return -1;
+	}
+	ret = CheckDowngradePossibility(package);
+	//printf ("Downgrade possibility checked\n"); //DEBUG
+	if (ret<0) return -1;
+	ret = IsPackageInCache(package);
+	for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgs_in_arm;i++) {
+		printf("%d: %s-%s", i, arm_pkgs[i].name, arm_pkgs[i].version);
+		if (!strcmp(arm_pkgs[i].version, installed_pkg_ver)) printf(" [installed]\n");
+		else if (!strcmp(arm_pkgs[i].version, install_version)) { printf(" [will be installed by default]\n"); tmpint=i; }
+		else printf("\n");
+	}
+	printf (">> Please enter package number, [q] to quit ");
+	if (tmpint>0) printf(", [d] to install default package: ");
+	scanf ("%s",package_number);
+	return 0;
+}
 int IsPackageInstalled(char *package) {
     const char *local;
+    
     pkg = alpm_db_get_pkg(db_local,package);
     local = alpm_pkg_get_name(pkg);
     if(!local) return 0; // pkg not found in system
@@ -60,35 +57,33 @@ int IsPackageInstalled(char *package) {
         return 1;
     }
 }
-///////////////////////////////////////////////////
 int CheckDowngradePossibility(char *package) {
 
-		ret = IsPackageInstalled(package);
-		if (!ret) {
-			if(!quiet_downgrade) printf("Package '%s' not installed.\n", package);
-			return -1;
-		}
-		ret = IsPackageInAur(package);
-		if (ret>0) { // Package in aur
-			if(!quiet_downgrade) printf("Package '%s' in AUR. Downgrade impossible.\n", package);
-			return -1;
-		}
-		else if(ret<0) { // inet connection error
-			printf ("Please check you internet connection. Error 1\n");
-			return -1;
-		}	
-		ret = ReadArm(package);
-		if (!ret) {
-			printf ("Sorry, in ARM 0 packages, or ARM temporary unavailable. Downgrade impossible.\n");
-			return -1;
-		}
-		//printf ("Downgrade possibility checked\n"); //DEBUG
-		return 0;
+	ret = IsPackageInstalled(package);
+	if (!ret) {
+		if(!quiet_downgrade) printf("Package '%s' not installed.\n", package);
+		return -1;
+	}
+	ret = IsPackageInAur(package);
+	if (ret>0) { // Package in aur
+		if(!quiet_downgrade) printf("Package '%s' in AUR. Downgrade impossible.\n", package);
+		return -1;
+	}
+	else if(ret<0) { // inet connection error
+		printf ("Please check you internet connection. Error 1\n");
+		return -1;
+	}	
+	ret = ReadArm(package);
+	if (!ret) {
+		printf ("Sorry, in ARM 0 packages, or ARM temporary unavailable. Downgrade impossible.\n");
+		return -1;
+	}
+	//printf ("Downgrade possibility checked\n"); //DEBUG
+	return 0;
 }
-//////////////////////////////////////////////////
 int IsPackageInCache(char *package) {
-
 	char full_path_to_packet[300];
+	
 	if(sizeof(void*) == 4) tmpchar = (char *)"i686"; // architecture,  
 	else if (sizeof(void*) == 8) tmpchar = (char *)"x86_64";
 	pkg_never_upgraded = 1;
@@ -120,19 +115,16 @@ int IsPackageInCache(char *package) {
 	}
 	else return 0;
 }
-//////////////////////////////////////////////////
 static size_t curl_handler(char *data, size_t size, size_t nmemb, void *userp) {
 
 	size_t realsize = size * nmemb;
 	struct curl_MemoryStruct *mem = (struct curl_MemoryStruct *)userp;
-
 	mem->memory = realloc(mem->memory, mem->size + realsize + 1);
 	memcpy(&(mem->memory[mem->size]), data, realsize);
 	mem->size += realsize;
 	mem->memory[mem->size] = 0;
 	return realsize;
 }
-//////////////////////////////////////////////////
 int IsPackageInAur(char *package) {
 
 	chunk.memory = malloc(1);
@@ -161,15 +153,13 @@ int IsPackageInAur(char *package) {
 	curl_global_cleanup();
   	return 0; // package not in AUR
 }
-///////////////////////////////////////////////////////
 void ReadPacmanLog() {
-
-	loglines_counter=0;
 	char *buff = NULL;
 	size_t len;
 	char *date, *time, *operat, *pack_name, *cur_version, *prev_version, *fake;
 	int i=0;
 
+	loglines_counter=0;
 	pFile=fopen("/var/log/pacman.log","r");
 	while (!feof(pFile)) {  // Count lines q-ty in pacman.log
 		getline(&buff, &len, pFile);
@@ -210,9 +200,7 @@ void ReadPacmanLog() {
 	fclose(pFile);
 	pacmanlog_length =loglines_counter;
 }
-///////////////////////////////////////////////////////
 int ReadArm(char *package) {
-
 	char  *str, *last, *architecture, *pointer;
 	int counter, counter2;
 	
@@ -278,10 +266,10 @@ int ReadArm(char *package) {
 return pkgs_in_arm;
 //return 0;
 }
-////////////////////////////////////////////////////////////////
 int IsPackageInArm(char *package, char *version) {
 	int arm_flag=0;
 	char t_pack[100];
+	
 	sprintf(t_pack,"%s-%s",package,version);
 	for(tmpint=0;strlen(arm_pkgs[tmpint].full_path)>0;tmpint++) {
 		//printf("%s\n",arm_pkgs[tmpint].full_path); // DEBUG
@@ -294,7 +282,6 @@ int IsPackageInArm(char *package, char *version) {
 	if (arm_flag==1) return tmpint;
 	else return 0;
 }
-////////////////////////////////////////////////////////////////
 int PacmanInit() {
 
 	pkgs = calloc(1, sizeof(struct packs));
