@@ -6,7 +6,9 @@ pkgdesc="Powerful packages downgrader for Archlinux. Works with libalpm, ARM and
 arch=('i686' 'x86_64')
 license=("GPL")
 url="https://github.com/DimaSmirnov/Archlinux-downgrader"
-source=($pkgname-$pkgver::"http://www.igus.lv/downgrader/downgrader.tar.xz") 
+source=($pkgname-$pkgver::"http://www.igus.lv/downgrader/downgrader.tar.xz")
+optdepends=('sudo: for installation via sudo')
+
 # install=$pkgname.install
 
 build() {
