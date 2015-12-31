@@ -1,5 +1,5 @@
 void ShowHelpWindow() {
-	printf("\nDowngrader, version %s (libalpm.so.8)\n",VERSION);
+	printf("\nDowngrader, version %s\n",VERSION);
 	printf(" usage: downgrader [ -h ] [-q] [ -l <package name> ] <PACKAGE_NAME>\n");
 	printf("  options:\n");
 	printf("   -h   <print this help and exit>\n");

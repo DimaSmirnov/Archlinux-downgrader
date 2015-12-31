@@ -8,12 +8,11 @@
 #include "cJSON.h"
 
 #define MAX_PKGS_FROM_ARM_FOR_USER 30
-#define VERSION "1.8.0-2"
+#define VERSION "1.8.0-4"
 
 #include "variables.h"
 #include "Interface.h"
 #include "Actions.h"
- 
 
 int main(int argc, char **argv) {
 	char *package;
@@ -24,24 +23,24 @@ int main(int argc, char **argv) {
 	else if (argc==3) package = argv[2];
 	else { ShowHelpWindow(); return 0; }
 	while ((param = getopt (argc, argv, "q:hl:")) != -1)
-		switch (param) {
-			case 'q':{ // Quiet downgrade (test option)
-				quiet_downgrade = 1;
-				package = optarg;
-				break;
-			}
-			case 'l':{ // Show list of possible packages for downgrade
-				show_list = 1;
-				package = optarg;
-				break;
-			}
-			case 'h':{ // help
-				ShowHelpWindow();
-				return 0;
-			}
+	switch (param) {
+		case 'h':{ // help
+			ShowHelpWindow();
+			return 0;
+		}			
+		case 'q':{ // Quiet downgrade (test option)
+			quiet_downgrade = 1;
+			break;
 		}
-	///////////////////////////// Show possible packages list when downgrade
-	if (show_list) {
+		case 'l':{ // Show list of possible packages for downgrade
+			show_list = 1;
+			break;
+		}
+	}
+	pacmaninit = PacmanInit();
+	packagesinarm = ReadArm(package);
+	
+	if (show_list) { // Show possible packages list when downgrade
 		
 		int pac_num;
 		printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
@@ -55,8 +54,7 @@ int main(int argc, char **argv) {
 		strcpy(install_command,"sudo pacman -U "); strcat(install_command, arm_pkgs[pac_num].link);
 		system(install_command);
 	}
-	//////////////////////////// Downgrade single package
-	else if (package) {
+	else if (package) { // Downgrade single package
 		int ispacmaninit = PacmanInit();
 	    if (ispacmaninit) {
 			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
@@ -68,6 +66,7 @@ int main(int argc, char **argv) {
 		if (!quiet_downgrade) printf ("Installed version: %s\n",installed_pkg_ver);
 		int down_result = DowngradePackage(package);
 	}
+	
 	PacmanDeinit();
 	return 0;	
 }

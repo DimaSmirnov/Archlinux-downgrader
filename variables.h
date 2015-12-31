@@ -50,5 +50,5 @@
 	CURLcode result;
 
 	int pkg_never_upgraded, ret, loglines_counter;
-	int pkgs_in_arm, tmpint;
+	int pkgs_in_arm, tmpint, packagesinarm, pacmaninit;
 	int debug, show_list, quiet_downgrade;

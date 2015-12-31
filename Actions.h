@@ -23,11 +23,9 @@ int DowngradePackage(char *package) {
 	return 1;
 }
 int GetChoiseForPackage(char *package) {
-	int pac_num;
-	
+
 	tmpint=0;
-	ret = PacmanInit();
-    if (ret) {
+    if (pacmaninit) {
 		if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
 		return -1;
 	}
@@ -73,8 +71,7 @@ int CheckDowngradePossibility(char *package) {
 		printf ("Please check you internet connection. Error 1\n");
 		return -1;
 	}	
-	ret = ReadArm(package);
-	if (!ret) {
+	if (!packagesinarm) { // If no packages in ARM
 		printf ("Sorry, in ARM 0 packages, or ARM temporary unavailable. Downgrade impossible.\n");
 		return -1;
 	}
@@ -209,7 +206,6 @@ int ReadArm(char *package) {
 
 	chunk.memory = malloc(1);
 	chunk.size = 0;
-	//printf ("Memory init\n"); //DEBUG
 	curl_global_init(CURL_GLOBAL_ALL);
 	curl = curl_easy_init();
 	//sprintf (conte,"http://arm.konnichi.com/search/raw.php?a=%s&q=^%s%24&core=1&extra=1&community=1",architecture,package);
@@ -232,7 +228,6 @@ int ReadArm(char *package) {
 	for (;str = strtok(NULL, "\n"); counter2++) {
 		strcpy(arm_pkgs[counter2].full_path,str);
 	}
-	
 	pkgs_in_arm = counter2;
 	counter=0;
 
@@ -259,7 +254,7 @@ int ReadArm(char *package) {
 		l++;
 	}
 	pkgs_in_arm = i-1; // finally packages q-ty in ARM
-	//if(!quiet_downgrade) printf("Packages in ARM: %d\n",pkgs_in_arm); // DEBUG
+	if(!quiet_downgrade) printf("Packages in ARM: %d\n",pkgs_in_arm); // DEBUG
 
 	if(chunk.memory) free(chunk.memory);
 
