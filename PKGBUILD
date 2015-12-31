@@ -1,7 +1,7 @@
 # Author: Dmitriy Smirnov <other@igus.lv>
-pkgname=downgrader
+pkgname=Archlinux_downgrader
 pkgver=1.8.0
-pkgrel=3
+pkgrel=4
 pkgdesc="Powerful packages downgrader for Archlinux. Works with libalpm, ARM and pacman logs"
 arch=('i686' 'x86_64')
 license=("GPL")
@@ -13,12 +13,12 @@ source=("git://github.com/DimaSmirnov/Archlinux-downgrader.git")
 # install=$pkgname.install
 
 build() {
-  cd $_gitname
+  cd src/$_gitname
   make
 }
 
 package() {
-  cd $_gitname
+  cd src/$_gitname
   install -D -m755 downgrader "$pkgdir/usr/bin/downgrader"
 }
 md5sums=('SKIP')
