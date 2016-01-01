@@ -9,7 +9,8 @@ _gitname=Archlinux-downgrader
 
 url="https://github.com/DimaSmirnov/Archlinux-downgrader"
 source=("git://github.com/DimaSmirnov/Archlinux-downgrader.git")
-  
+md5sums=('SKIP')
+ 
 # install=$pkgname.install
 
 build() {
@@ -21,4 +22,4 @@ package() {
   cd $_gitname
   install -D -m755 downgrader "$pkgdir/usr/bin/downgrader"
 }
-md5sums=('SKIP')
+

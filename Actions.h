@@ -48,7 +48,7 @@ int IsPackageInstalled(char *package) {
     const char *local;
     
     pkg = alpm_db_get_pkg(db,package);
-    if (!pkg) { printf ("Alpm error 1 \n"); return 0; }// any error with package pick up from database
+    if (!pkg) return 2; // no package in databse
     local = alpm_pkg_get_name(pkg);
     if(!local) return 0; // pkg not found in system
     else {
@@ -59,10 +59,15 @@ int IsPackageInstalled(char *package) {
 int CheckDowngradePossibility(char *package) {
 
 	ret = IsPackageInstalled(package);
-	if (!ret) {
+	if (ret==2) {
+		if(!quiet_downgrade) printf("Package '%s' not found. Please check package name\n", package);
+		return -1;
+	}
+	else if (!ret) {
 		if(!quiet_downgrade) printf("Package '%s' not installed.\n", package);
 		return -1;
 	}
+	
 	ret = IsPackageInAur(package);
 	if (ret>0) { // Package in aur
 		if(!quiet_downgrade) printf("Package '%s' in AUR. Downgrade impossible.\n", package);
@@ -71,7 +76,8 @@ int CheckDowngradePossibility(char *package) {
 	else if(ret<0) { // inet connection error
 		printf ("Please check you internet connection. Can`t read AUR\n");
 		return -1;
-	}	
+	}
+	packagesinarm = ReadArm(package);
 	if (!packagesinarm) { // If no packages in ARM
 		printf ("Sorry, in ARM 0 packages, or ARM temporary unavailable. Downgrade impossible.\n");
 		return -1;
