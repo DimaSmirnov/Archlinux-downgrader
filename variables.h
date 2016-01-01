@@ -1,6 +1,6 @@
 	int Initialization();
 	int Deinitialization();
-	int IsPackageInstalled(char *);
+	int IsPackageAvailable(char *);
 	int IsPackageInCache(char *);
 	int IsPackageInAur(char *);
 	int CheckDowngradePossibility(char *);

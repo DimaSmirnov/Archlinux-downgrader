@@ -30,7 +30,6 @@ int GetChoiseForPackage(char *package) {
 		return -1;
 	}
 	ret = CheckDowngradePossibility(package);
-	//printf ("Downgrade possibility checked\n"); //DEBUG
 	if (ret<0) return -1;
 	ret = IsPackageInCache(package);
 	for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgs_in_arm;i++) {
@@ -44,21 +43,27 @@ int GetChoiseForPackage(char *package) {
 	scanf ("%s",package_number);
 	return 0;
 }
-int IsPackageInstalled(char *package) {
+
+int IsPackageAvailable(char *package) {
     const char *local;
     
     pkg = alpm_db_get_pkg(db,package);
-    if (!pkg) return 2; // no package in databse
+    if (!pkg) return 2; // no package in db
+
+	packagesinarm = ReadArm(package);
+	//if (!packagesinarm) return -1; // If no packages in ARM
+
     local = alpm_pkg_get_name(pkg);
-    if(!local) return 0; // pkg not found in system
+    if(!local) return 0; // pkg not installed
     else {
         installed_pkg_ver = alpm_pkg_get_version(pkg);
-        return 1;
+        return 1; // pkg available
     }
 }
+
 int CheckDowngradePossibility(char *package) {
 
-	ret = IsPackageInstalled(package);
+	ret = IsPackageAvailable(package);
 	if (ret==2) {
 		if(!quiet_downgrade) printf("Package '%s' not found. Please check package name\n", package);
 		return -1;
@@ -67,6 +72,7 @@ int CheckDowngradePossibility(char *package) {
 		if(!quiet_downgrade) printf("Package '%s' not installed.\n", package);
 		return -1;
 	}
+	if (ret==1) return 0; // pkg found, no need to check  AUR
 	
 	ret = IsPackageInAur(package);
 	if (ret>0) { // Package in aur
@@ -77,14 +83,11 @@ int CheckDowngradePossibility(char *package) {
 		printf ("Please check you internet connection. Can`t read AUR\n");
 		return -1;
 	}
-	packagesinarm = ReadArm(package);
-	if (!packagesinarm) { // If no packages in ARM
-		printf ("Sorry, in ARM 0 packages, or ARM temporary unavailable. Downgrade impossible.\n");
-		return -1;
-	}
-	//printf ("Downgrade possibility checked\n"); //DEBUG
+
+
 	return 0;
 }
+
 int IsPackageInCache(char *package) {
 	char full_path_to_packet[300];
 	
@@ -154,7 +157,7 @@ int IsPackageInAur(char *package) {
 	cJSON_Delete(root);
 
 	curl_easy_cleanup(curl);
-	//if(chunk.memory) free(chunk.memory);
+	if(chunk.memory) free(chunk.memory);
 	curl_global_cleanup();
   	return 0; // package not in AUR
 }

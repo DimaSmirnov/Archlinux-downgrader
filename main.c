@@ -38,7 +38,6 @@ int main(int argc, char **argv) {
 		}
 	}
 	init = Initialization();
-	//packagesinarm = ReadArm(package);
 	
 	if (show_list) { // Show possible packages list when downgrade
 		int pac_num;
