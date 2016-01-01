@@ -37,16 +37,15 @@ int main(int argc, char **argv) {
 			break;
 		}
 	}
-	pacmaninit = PacmanInit();
+	init = Initialization();
 	packagesinarm = ReadArm(package);
 	
 	if (show_list) { // Show possible packages list when downgrade
-		
 		int pac_num;
 		printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
 		show_list = show_list;
 		int ret = GetChoiseForPackage(package);
-		if (ret<0) { PacmanDeinit(); return 0; }
+		if (ret<0) { Deinitialization(); return 0; }
 		
 		if (!strcmp(package_number,"d")) pac_num = tmpint;
 		else if (!strcmp(package_number,"q")) return 0;
@@ -55,18 +54,17 @@ int main(int argc, char **argv) {
 		system(install_command);
 	}
 	else if (package) { // Downgrade single package
-		int ispacmaninit = PacmanInit();
-	    if (ispacmaninit) {
+	    if (init) {
 			if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
 			return 1;
 		}
 		if(!quiet_downgrade) printf ("\033[1;%dm Downgrade package: %s \033[0m \n", 31, package);
 		ret = CheckDowngradePossibility(package);
-		if (ret<0) { PacmanDeinit(); return 0; }
+		if (ret<0) { Deinitialization(); return 0; }
 		if (!quiet_downgrade) printf ("Installed version: %s\n",installed_pkg_ver);
 		int down_result = DowngradePackage(package);
 	}
 	
-	PacmanDeinit();
+	Deinitialization();
 	return 0;	
 }

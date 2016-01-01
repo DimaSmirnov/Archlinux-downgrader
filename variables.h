@@ -1,5 +1,5 @@
-	int PacmanInit();
-	int PacmanDeinit();
+	int Initialization();
+	int Deinitialization();
 	int IsPackageInstalled(char *);
 	int IsPackageInCache(char *);
 	int IsPackageInAur(char *);
@@ -14,6 +14,7 @@
 	alpm_db_t *db_local;
 	alpm_pkg_t *pkg;
 	char *dbpath, *tmpchar;
+	
 	char tmp_string[200], package_number[2];
 	char install_command[300]; // Команда для установки
 	char install_version[30]; // Версия пакета для установки
@@ -50,5 +51,5 @@
 	CURLcode result;
 
 	int pkg_never_upgraded, ret, loglines_counter;
-	int pkgs_in_arm, tmpint, packagesinarm, pacmaninit;
+	int pkgs_in_arm, tmpint, packagesinarm, init;
 	int debug, show_list, quiet_downgrade;

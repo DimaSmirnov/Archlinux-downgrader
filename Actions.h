@@ -25,7 +25,7 @@ int DowngradePackage(char *package) {
 int GetChoiseForPackage(char *package) {
 
 	tmpint=0;
-    if (pacmaninit) {
+    if (init) {
 		if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
 		return -1;
 	}
@@ -254,13 +254,12 @@ int ReadArm(char *package) {
 		l++;
 	}
 	pkgs_in_arm = i-1; // finally packages q-ty in ARM
-	if(!quiet_downgrade) printf("Packages in ARM: %d\n",pkgs_in_arm); // DEBUG
-
+	//if(!quiet_downgrade) printf("Packages in ARM: %d\n",pkgs_in_arm); // DEBUG
 	if(chunk.memory) free(chunk.memory);
 
 return pkgs_in_arm;
-//return 0;
 }
+
 int IsPackageInArm(char *package, char *version) {
 	int arm_flag=0;
 	char t_pack[100];
@@ -277,9 +276,10 @@ int IsPackageInArm(char *package, char *version) {
 	if (arm_flag==1) return tmpint;
 	else return 0;
 }
-int PacmanInit() {
+int Initialization() {
 
 	pkgs = calloc(1, sizeof(struct packs));
+	
 	arm_pkgs = calloc(1, sizeof(struct arm_packs));
 	arm_pkgs = realloc(arm_pkgs, MAX_PKGS_FROM_ARM_FOR_USER*sizeof(struct arm_packs));
 
@@ -294,7 +294,7 @@ int PacmanInit() {
 
     return 0;
 }
-int PacmanDeinit() {
+int Deinitialization() {
 	free(pkgs);
 	free(arm_pkgs);
 	alpm_release(alpm_handle);
