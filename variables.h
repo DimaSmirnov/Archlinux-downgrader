@@ -1,20 +1,23 @@
-	int Initialization();
+	int Initialization(char *);
 	int Deinitialization();
-	int IsPackageAvailable(char *);
-	int IsPackageInCache(char *);
-	int IsPackageInAur(char *);
-	int CheckDowngradePossibility(char *);
+	int IsPackageAvailable( char *);
+	int IsPackageInCache( char *);
+	int IsPackageInAur( char *);
+	int CheckDowngradePossibility( char *);
 	void ReadPacmanLog();
 	int ReadArm(char *);
-	int IsPackageInArm(char *, char *);
-	int DowngradePackage(char *);
-	int GetChoiseForPackage(char *);
+	int IsPackageInArm( char *, char *);
+	int DowngradePackage( char *);
+	int GetChoiseForPackage( char *);
  
 	alpm_handle_t *alpm_handle;
 	alpm_db_t *db;
 	alpm_pkg_t *pkg;
 	char *dbpath, *tmpchar;
+	char *str, *last, *architecture, *pointer;
+	const char *pkgname;
 	
+	char full[1000];
 	char tmp_string[200], package_number[2];
 	char install_command[300]; // Команда для установки
 	char install_version[30]; // Версия пакета для установки
@@ -46,6 +49,8 @@
 		char *memory;
 		size_t size;
 	};
+	
+	struct curl_MemoryStruct chunk;
 	
 	CURL *curl;
 	CURLcode result;
