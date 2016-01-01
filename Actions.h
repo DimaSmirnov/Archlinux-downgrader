@@ -47,7 +47,8 @@ int GetChoiseForPackage(char *package) {
 int IsPackageInstalled(char *package) {
     const char *local;
     
-    pkg = alpm_db_get_pkg(db_local,package);
+    pkg = alpm_db_get_pkg(db,package);
+    if (!pkg) { printf ("Alpm error 1 \n"); return 0; }// any error with package pick up from database
     local = alpm_pkg_get_name(pkg);
     if(!local) return 0; // pkg not found in system
     else {
@@ -68,7 +69,7 @@ int CheckDowngradePossibility(char *package) {
 		return -1;
 	}
 	else if(ret<0) { // inet connection error
-		printf ("Please check you internet connection. Error 1\n");
+		printf ("Please check you internet connection. Can`t read AUR\n");
 		return -1;
 	}	
 	if (!packagesinarm) { // If no packages in ARM
@@ -123,7 +124,8 @@ static size_t curl_handler(char *data, size_t size, size_t nmemb, void *userp) {
 	return realsize;
 }
 int IsPackageInAur(char *package) {
-
+	struct curl_MemoryStruct chunk;
+	
 	chunk.memory = malloc(1);
 	chunk.size = 0;
 	curl_global_init(CURL_GLOBAL_ALL);
@@ -146,7 +148,7 @@ int IsPackageInAur(char *package) {
 	cJSON_Delete(root);
 
 	curl_easy_cleanup(curl);
-	if(chunk.memory) free(chunk.memory);
+	//if(chunk.memory) free(chunk.memory);
 	curl_global_cleanup();
   	return 0; // package not in AUR
 }
@@ -197,9 +199,11 @@ void ReadPacmanLog() {
 	fclose(pFile);
 	pacmanlog_length =loglines_counter;
 }
+
 int ReadArm(char *package) {
 	char  *str, *last, *architecture, *pointer;
 	int counter, counter2;
+	struct curl_MemoryStruct chunk;
 	
 	if(sizeof(void*) == 4) { architecture = (char *)"i686";  }
 	else if (sizeof(void*) == 8) { architecture = (char *)"x86_64"; }
@@ -215,7 +219,7 @@ int ReadArm(char *package) {
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
 	result = curl_easy_perform(curl);
 	if(result != CURLE_OK) {
-		printf ("Please check you internet connection. Error 2 (Can`t read ARM)\n");
+		printf ("Please check you internet connection. Can`t read ARM\n");
 		return -1; // Exit with error
 	}		
 	curl_easy_cleanup(curl);
@@ -255,7 +259,7 @@ int ReadArm(char *package) {
 	}
 	pkgs_in_arm = i-1; // finally packages q-ty in ARM
 	//if(!quiet_downgrade) printf("Packages in ARM: %d\n",pkgs_in_arm); // DEBUG
-	if(chunk.memory) free(chunk.memory);
+	//if(chunk.memory) free(chunk.memory);
 
 return pkgs_in_arm;
 }
@@ -289,7 +293,7 @@ int Initialization() {
         printf("Libalpm initialize error!\n");
         return 1;
     }
-    db_local = alpm_get_localdb(alpm_handle);
+    db = alpm_get_localdb(alpm_handle);
     ReadPacmanLog();
 
     return 0;

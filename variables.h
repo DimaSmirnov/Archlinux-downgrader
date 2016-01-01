@@ -11,7 +11,7 @@
 	int GetChoiseForPackage(char *);
  
 	alpm_handle_t *alpm_handle;
-	alpm_db_t *db_local;
+	alpm_db_t *db;
 	alpm_pkg_t *pkg;
 	char *dbpath, *tmpchar;
 	
@@ -46,7 +46,7 @@
 		char *memory;
 		size_t size;
 	};
-	struct curl_MemoryStruct chunk;
+	
 	CURL *curl;
 	CURLcode result;
 
