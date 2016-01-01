@@ -23,3 +23,4 @@ package() {
 }
 md5sums=('SKIP')
 md5sums=('SKIP')
+md5sums=('SKIP')
