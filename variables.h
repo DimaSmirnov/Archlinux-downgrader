@@ -23,7 +23,7 @@
 	char install_version[30]; // Версия пакета для установки
 	const char *installed_pkg_ver;  // Текущая установленная версия
 	long int pacmanlog_length;
-	FILE *pFile, *pFile2;
+	FILE *pFile;
 
 	struct packs{ // -- Действия с пакетами из логов пакмана
 		char name[40]; // название пакета
@@ -36,12 +36,12 @@
 	//struct packs *pkgs;
 
 	struct arm_packs{ // -- список пакетов в ARM для вывода юзеру
-		char full_path[300]; // полный адрес до пакета
-		char version[50]; // Version of package
+		char full_path[350]; // полный адрес до пакета
+		char version[20]; // Version of package
 		char name[50]; // Name of package
 		char repository[20]; // Repository of package
 		char link[100]; //Link for download
-		char pkg_release[5]; //Package release
+		int pkg_release; //Package release
 	} *arm_pkgs;
 	//struct arm_packs *arm_pkgs;
 
@@ -57,4 +57,4 @@
 
 	int pkg_never_upgraded, ret, loglines_counter;
 	int pkgs_in_arm, tmpint, packagesinarm, init;
-	int debug, show_list, quiet_downgrade;
+	int debug, show_list, quiet_downgrade, downloaded_size;

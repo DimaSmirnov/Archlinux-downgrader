@@ -2,7 +2,6 @@ int DowngradePackage( char *package) {
 	tmpchar=NULL;
 	
 	int isincache = IsPackageInCache(package); // Here also parsing pacman.log and using flag actions.package_never_upgraded
-	//printf ("IsPackageInCache checked\n"); //DEBUG
 	if (isincache) {
 		if (!quiet_downgrade) printf("Downgrading from Cache, to version %s\n",install_version);
 		//printf ("command: %s\n",install_command); //DEBUG
@@ -23,7 +22,6 @@ int DowngradePackage( char *package) {
 	return 1;
 }
 int GetChoiseForPackage( char *package) {
-
 	tmpint=0;
     if (init) {
 		if(!quiet_downgrade) printf("Pacman not initialized! Interrupted\n");
@@ -45,7 +43,6 @@ int GetChoiseForPackage( char *package) {
 }
 
 int IsPackageAvailable(char *package) {
-    
 	packagesinarm = ReadArm(package);
 	if (!packagesinarm) return 2; // wrong package name
     if(!pkgname) return 1; // pkg not installed
@@ -56,7 +53,6 @@ int IsPackageAvailable(char *package) {
 }
 
 int CheckDowngradePossibility(char *package) {
-
 	ret = IsPackageAvailable(package);
 	if (ret==2) {
 		if(!quiet_downgrade) printf("Package '%s' not available. Please check package name\n", package);
@@ -77,8 +73,6 @@ int CheckDowngradePossibility(char *package) {
 		printf ("Please check you internet connection. Can`t read AUR\n");
 		return -1;
 	}
-
-
 	return 0;
 }
 
@@ -123,6 +117,7 @@ static size_t curl_handler(char *data, size_t size, size_t nmemb, void *userp) {
 	mem->memory = realloc(mem->memory, mem->size + realsize + 1);
 	memcpy(&(mem->memory[mem->size]), data, realsize);
 	mem->size += realsize;
+	downloaded_size += mem->size+realsize + 1;
 	mem->memory[mem->size] = 0;
 	return realsize;
 }
@@ -167,7 +162,7 @@ void ReadPacmanLog() {
 		loglines_counter++;
 	}
 	rewind(pFile);
-
+	pkgs = calloc(1, sizeof(struct packs));
 	pkgs = realloc(pkgs, loglines_counter * sizeof(struct packs));
 
 	loglines_counter=0;
@@ -226,14 +221,17 @@ int ReadArm(char *package) {
 	counter2=0;
 	pointer = chunk.memory;
 	
+	arm_pkgs = realloc(arm_pkgs, downloaded_size+sizeof(struct arm_packs));
+	//printf ("::: downloaded_size=%d\n::: sizeof(struct arm_packs)=%d\n\n",downloaded_size,sizeof(struct arm_packs)); //DEBUG
+	
 	str = strtok(pointer, "\n");
 	strcpy(arm_pkgs[counter2].full_path,str);
 	counter2++;
 	for (;str = strtok(NULL, "\n"); counter2++) {
 		strcpy(arm_pkgs[counter2].full_path,str);
 	}
-	pkgs_in_arm = counter2; // finally packages q-ty in ARM with packages from testing
-	//if(!quiet_downgrade) printf("1.Packages in ARM: %d\n",pkgs_in_arm); // DEBUG
+	pkgs_in_arm = counter2;
+	//if(!quiet_downgrade) printf("1. Packages in ARM: %d (with testing)\n",pkgs_in_arm-1); // DEBUG
 	if (!(pkgs_in_arm-1)) return 0;
 	counter=0;
 
@@ -254,13 +252,13 @@ int ReadArm(char *package) {
 			str = strtok(NULL, "|");
 			strcpy(arm_pkgs[i].link,str); //printf(", link: %s\n",arm_pkgs[i].link);
 			str = strtok(NULL, "|");
-			strcpy(arm_pkgs[i].pkg_release,str);
+			arm_pkgs[i].pkg_release=atoi(str);
 			i++;
 		}
 		l++;
 	}
-	pkgs_in_arm = i-1; // finally packages q-ty in ARM without packages from testing
-	//if(!quiet_downgrade) printf("2.Packages in ARM: %d\n",pkgs_in_arm); // DEBUG
+	pkgs_in_arm = i-1;
+	//if(!quiet_downgrade) printf("2. Packages in ARM: %d (without testing)\n",pkgs_in_arm); // DEBUG
 	if(chunk.memory) free(chunk.memory);
 
 return pkgs_in_arm;
@@ -285,8 +283,6 @@ int IsPackageInArm( char *package, char *version) {
 int Initialization(char *package) {
 
 	arm_pkgs = calloc(1, sizeof(struct arm_packs));
-	arm_pkgs = realloc(arm_pkgs, MAX_PKGS_FROM_ARM_FOR_USER*sizeof(struct arm_packs));
-	pkgs = calloc(1, sizeof(struct packs));
 
     alpm_handle = NULL;
     alpm_handle = alpm_initialize("/","/var/lib/pacman/",0);
@@ -297,12 +293,14 @@ int Initialization(char *package) {
     db = alpm_get_localdb(alpm_handle);
  	pkg = alpm_db_get_pkg(db,(const char*)package);
     pkgname = alpm_pkg_get_name(pkg);
-
+	
     ReadPacmanLog();
 
     return 0;
 }
 int Deinitialization() {
-	free(pkgs);
+	alpm_release(alpm_handle);
+	free (pkgs);
+	free (arm_pkgs);
 	return 0;
 }
