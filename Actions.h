@@ -110,14 +110,14 @@ int IsPackageInCache(char *package) {
 	}
 	else return 0;
 }
-static size_t curl_handler(char *data, size_t size, size_t nmemb, void *userp) {
+size_t curl_handler(char *data, size_t size, size_t nmemb, void *userp) {
 
 	size_t realsize = size * nmemb;
 	struct curl_MemoryStruct *mem = (struct curl_MemoryStruct *)userp;
 	mem->memory = realloc(mem->memory, mem->size + realsize + 1);
 	memcpy(&(mem->memory[mem->size]), data, realsize);
 	mem->size += realsize;
-	downloaded_size += mem->size+realsize + 1;
+	downloaded_size += realsize;
 	mem->memory[mem->size] = 0;
 	return realsize;
 }
@@ -198,8 +198,8 @@ void ReadPacmanLog() {
 }
 
 int ReadArm(char *package) {
-	int counter, counter2;
-
+	int counter;
+	downloaded_size=0;
 	if(sizeof(void*) == 4) { architecture = (char *)"i686";  }
 	else if (sizeof(void*) == 8) { architecture = (char *)"x86_64"; }
 	
@@ -218,32 +218,33 @@ int ReadArm(char *package) {
 	}		
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
-	counter2=0;
-	pointer = chunk.memory;
-	
-	arm_pkgs = realloc(arm_pkgs, downloaded_size+sizeof(struct arm_packs));
-	//printf ("::: downloaded_size=%d\n::: sizeof(struct arm_packs)=%d\n\n",downloaded_size,sizeof(struct arm_packs)); //DEBUG
-	
-	str = strtok(pointer, "\n");
-	strcpy(arm_pkgs[counter2].full_path,str);
-	counter2++;
-	for (;str = strtok(NULL, "\n"); counter2++) {
-		strcpy(arm_pkgs[counter2].full_path,str);
-	}
-	pkgs_in_arm = counter2;
-	//if(!quiet_downgrade) printf("1. Packages in ARM: %d (with testing)\n",pkgs_in_arm-1); // DEBUG
-	if (!(pkgs_in_arm-1)) return 0;
 	counter=0;
+	pointer = chunk.memory;
+
+	char *pch = strchr(pointer,'\n');
+	while (pch!=NULL) { counter++;  pch=strchr(pch+1,'\n'); }
+	//if(!quiet_downgrade) printf("::: Packages in ARM: %d (with testing)\n",counter); // DEBUG
+	arm_pkgs = realloc(arm_pkgs, counter*sizeof(struct arm_packs));
+	//printf ("::: downloaded_size=%d\n::: sizeof(struct arm_packs)=%d\n",downloaded_size, sizeof(struct arm_packs)); //DEBUG
+	//printf ("::: Memory locked for %d entries\n\n", counter); //DEBUG
+	pkgs_in_arm = counter;
+	if (!pkgs_in_arm) return 0;	
+	counter=0;
+	str = strtok(pointer, "\n");
+	strcpy(arm_pkgs[counter].full_path,str);
+	counter++;
+	for (;str = strtok(NULL, "\n"); counter++) {
+		strcpy(arm_pkgs[counter].full_path,str);
+	}
 
 	int l=0, i=1;
-	
 	while (i<MAX_PKGS_FROM_ARM_FOR_USER) { // Get info about packages in ARM
-		if (!strlen(arm_pkgs[l].full_path)) break;
+		if (l==pkgs_in_arm) break;
 		strcpy(full,arm_pkgs[l].full_path);
 		str = strtok(full, "|");
-		if (strcmp(str,"testing")) { // Exclude packages from `testing`
+		if (strcmp(str,"multilib-testing") && strcmp(str,"testing") ) { // Exclude packages from `testing`
 			strcpy(arm_pkgs[i].repository,str); 
-			//printf("%d: Repo: %s",i, arm_pkgs[i].repository); // DEBUG
+			//printf("%d: Repo: %s\n",i, arm_pkgs[i].repository); // DEBUG
 			str = strtok(NULL, "|");
 			strcpy(arm_pkgs[i].name,str); //printf(", name: %s",arm_pkgs[i].name); //DEBUG
 			str = strtok(NULL, "|");
