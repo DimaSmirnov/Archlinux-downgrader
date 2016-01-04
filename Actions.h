@@ -30,7 +30,7 @@ int GetChoiseForPackage( char *package) {
 	ret = CheckDowngradePossibility(package);
 	if (ret<0) return -1;
 	ret = IsPackageInCache(package);
-	for (int i=1;i<MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgs_in_arm;i++) {
+	for (int i=1;i<=MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgs_in_arm;i++) {
 		printf("%d: %s-%s", i, arm_pkgs[i].name, arm_pkgs[i].version);
 		if (!strcmp(arm_pkgs[i].version, installed_pkg_ver)) printf(" [installed]\n");
 		else if (!strcmp(arm_pkgs[i].version, install_version)) { printf(" [will be installed by default]\n"); tmpint=i; }
@@ -117,7 +117,6 @@ size_t curl_handler(char *data, size_t size, size_t nmemb, void *userp) {
 	mem->memory = realloc(mem->memory, mem->size + realsize + 1);
 	memcpy(&(mem->memory[mem->size]), data, realsize);
 	mem->size += realsize;
-	downloaded_size += realsize;
 	mem->memory[mem->size] = 0;
 	return realsize;
 }
@@ -133,7 +132,10 @@ int IsPackageInAur(char *package) {
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 	result = curl_easy_perform(curl);
-	if(result != CURLE_OK) return -1; // Exit with error
+	if(result != CURLE_OK) {
+		printf ("Please check you internet connection. AUR reading error\n");
+		return -1; // Exit with error
+	}	
 	//// Parsing AUR response
 	cJSON *root = cJSON_Parse(chunk.memory);
 	cJSON *item = cJSON_GetObjectItem(root,"results");
@@ -143,10 +145,9 @@ int IsPackageInAur(char *package) {
 		if (!strcmp(tmpchar,package)) return 1; // package in AUR
 	}
 	cJSON_Delete(root);
-
 	curl_easy_cleanup(curl);
+	curl_global_cleanup();	
 	if(chunk.memory) free(chunk.memory);
-	curl_global_cleanup();
   	return 0; // package not in AUR
 }
 void ReadPacmanLog() {
@@ -199,7 +200,7 @@ void ReadPacmanLog() {
 
 int ReadArm(char *package) {
 	int counter;
-	downloaded_size=0;
+
 	if(sizeof(void*) == 4) { architecture = (char *)"i686";  }
 	else if (sizeof(void*) == 8) { architecture = (char *)"x86_64"; }
 	
@@ -224,27 +225,24 @@ int ReadArm(char *package) {
 	char *pch = strchr(pointer,'\n');
 	while (pch!=NULL) { counter++;  pch=strchr(pch+1,'\n'); }
 	//if(!quiet_downgrade) printf("::: Packages in ARM: %d (with testing)\n",counter); // DEBUG
-	arm_pkgs = realloc(arm_pkgs, counter*sizeof(struct arm_packs));
-	//printf ("::: downloaded_size=%d\n::: sizeof(struct arm_packs)=%d\n",downloaded_size, sizeof(struct arm_packs)); //DEBUG
+	arm_pkgs = realloc(arm_pkgs, counter*sizeof(struct arm_packs)+sizeof(struct arm_packs));
 	//printf ("::: Memory locked for %d entries\n\n", counter); //DEBUG
 	pkgs_in_arm = counter;
-	if (!pkgs_in_arm) return 0;	
+	if (!pkgs_in_arm) return 0;
+	if (pkgs_in_arm>=MAX_PKGS_FROM_ARM_FOR_USER) pkgs_in_arm = MAX_PKGS_FROM_ARM_FOR_USER;
+	
 	counter=0;
 	str = strtok(pointer, "\n");
 	strcpy(arm_pkgs[counter].full_path,str);
 	counter++;
-	for (;str = strtok(NULL, "\n"); counter++) {
-		strcpy(arm_pkgs[counter].full_path,str);
-	}
+	for (;str = strtok(NULL, "\n"); counter++) { strcpy(arm_pkgs[counter].full_path,str); }
 
 	int l=0, i=1;
-	while (i<MAX_PKGS_FROM_ARM_FOR_USER) { // Get info about packages in ARM
-		if (l==pkgs_in_arm) break;
+	while (i<=pkgs_in_arm) { // Get info about packages in ARM
 		strcpy(full,arm_pkgs[l].full_path);
 		str = strtok(full, "|");
 		if (strcmp(str,"multilib-testing") && strcmp(str,"testing") ) { // Exclude packages from `testing`
-			strcpy(arm_pkgs[i].repository,str); 
-			//printf("%d: Repo: %s\n",i, arm_pkgs[i].repository); // DEBUG
+			strcpy(arm_pkgs[i].repository,str); //printf("%d: Repo: %s\n",i, arm_pkgs[i].repository); // DEBUG
 			str = strtok(NULL, "|");
 			strcpy(arm_pkgs[i].name,str); //printf(", name: %s",arm_pkgs[i].name); //DEBUG
 			str = strtok(NULL, "|");

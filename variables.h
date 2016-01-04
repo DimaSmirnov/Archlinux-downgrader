@@ -57,4 +57,4 @@
 
 	int pkg_never_upgraded, ret, loglines_counter;
 	int pkgs_in_arm, tmpint, packagesinarm, init;
-	int debug, show_list, quiet_downgrade, downloaded_size;
+	int debug, show_list, quiet_downgrade;
