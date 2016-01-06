@@ -224,39 +224,39 @@ int ReadArm(char *package) {
 
 	char *pch = strchr(pointer,'\n');
 	while (pch!=NULL) { counter++;  pch=strchr(pch+1,'\n'); }
-	//if(!quiet_downgrade) printf("::: Packages in ARM: %d (with testing)\n",counter); // DEBUG
+	//if(!quiet_downgrade) printf("1. Packages in ARM: %d (with testing)\n",counter); // DEBUG
 	arm_pkgs = realloc(arm_pkgs, counter*sizeof(struct arm_packs)+sizeof(struct arm_packs));
 	//printf ("::: Memory locked for %d entries\n\n", counter); //DEBUG
 	pkgs_in_arm = counter;
 	if (!pkgs_in_arm) return 0;
-	if (pkgs_in_arm>=MAX_PKGS_FROM_ARM_FOR_USER) pkgs_in_arm = MAX_PKGS_FROM_ARM_FOR_USER;
-	
+	if (pkgs_in_arm>MAX_PKGS_FROM_ARM_FOR_USER) pkgs_in_arm = MAX_PKGS_FROM_ARM_FOR_USER;
 	counter=0;
+	pointer = chunk.memory;
 	str = strtok(pointer, "\n");
 	strcpy(arm_pkgs[counter].full_path,str);
 	counter++;
 	for (;str = strtok(NULL, "\n"); counter++) { strcpy(arm_pkgs[counter].full_path,str); }
-
-	int l=0, i=1;
-	while (l<pkgs_in_arm) { // Get info about packages in ARM
-		strcpy(full,arm_pkgs[l].full_path);
+	counter=0;
+	int notest_cntr=1;
+	while (counter<pkgs_in_arm) { // Get info about packages in ARM
+		strcpy(full,arm_pkgs[counter].full_path);
 		str = strtok(full, "|");
-		if (strcmp(str,"multilib-testing") && strcmp(str,"testing") ) { // Exclude packages from `testing`
-			strcpy(arm_pkgs[i].repository,str); //printf("%d: Repo: %s\n",i, arm_pkgs[i].repository); // DEBUG
+		if (strcmp(str,"multilib-testing") || strcmp(str,"testing") ) { // Exclude packages from `testing`
+			strcpy(arm_pkgs[notest_cntr].repository,str); //printf("%d: Repo: %s\n",i, arm_pkgs[i].repository); // DEBUG
 			str = strtok(NULL, "|");
-			strcpy(arm_pkgs[i].name,str); //printf(", name: %s",arm_pkgs[i].name); //DEBUG
+			strcpy(arm_pkgs[notest_cntr].name,str); //printf(", name: %s",arm_pkgs[i].name); //DEBUG
 			str = strtok(NULL, "|");
 			str = strtok(NULL, "|");
-			strcpy(arm_pkgs[i].version,str); //printf(", version: %s",arm_pkgs[i].version);
+			strcpy(arm_pkgs[notest_cntr].version,str); //printf(", version: %s",arm_pkgs[i].version);
 			str = strtok(NULL, "|");
-			strcpy(arm_pkgs[i].link,str); //printf(", link: %s\n",arm_pkgs[i].link);
+			strcpy(arm_pkgs[notest_cntr].link,str); //printf(", link: %s\n",arm_pkgs[i].link);
 			str = strtok(NULL, "|");
-			arm_pkgs[i].pkg_release=atoi(str);
-			i++;
+			arm_pkgs[notest_cntr].pkg_release=atoi(str);
+			notest_cntr++;
 		}
-		l++;
+		counter++;
 	}
-	pkgs_in_arm = i-1;
+	pkgs_in_arm = notest_cntr-1;
 	//if(!quiet_downgrade) printf("2. Packages in ARM: %d (without testing)\n",pkgs_in_arm); // DEBUG
 	if(chunk.memory) free(chunk.memory);
 
