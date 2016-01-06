@@ -238,7 +238,7 @@ int ReadArm(char *package) {
 	for (;str = strtok(NULL, "\n"); counter++) { strcpy(arm_pkgs[counter].full_path,str); }
 
 	int l=0, i=1;
-	while (i<=pkgs_in_arm) { // Get info about packages in ARM
+	while (l<pkgs_in_arm) { // Get info about packages in ARM
 		strcpy(full,arm_pkgs[l].full_path);
 		str = strtok(full, "|");
 		if (strcmp(str,"multilib-testing") && strcmp(str,"testing") ) { // Exclude packages from `testing`
