@@ -41,7 +41,6 @@ int GetChoiseForPackage( char *package) {
 	scanf ("%s",package_number);
 	return 0;
 }
-
 int IsPackageAvailable(char *package) {
 	packagesinarm = ReadArm(package);
 	if (!packagesinarm) return 2; // wrong package name
@@ -51,7 +50,6 @@ int IsPackageAvailable(char *package) {
         return 0; // pkg available
     }
 }
-
 int CheckDowngradePossibility(char *package) {
 	ret = IsPackageAvailable(package);
 	if (ret==2) {
@@ -75,7 +73,6 @@ int CheckDowngradePossibility(char *package) {
 	}
 	return 0;
 }
-
 int IsPackageInCache(char *package) {
 	char full_path_to_packet[300];
 	
@@ -197,7 +194,6 @@ void ReadPacmanLog() {
 	fclose(pFile);
 	pacmanlog_length =loglines_counter;
 }
-
 int ReadArm(char *package) {
 	int counter;
 
@@ -262,7 +258,6 @@ int ReadArm(char *package) {
 
 return pkgs_in_arm;
 }
-
 int IsPackageInArm( char *package, char *version) {
 	int arm_flag=0;
 	char t_pack[100];

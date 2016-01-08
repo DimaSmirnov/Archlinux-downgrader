@@ -1,3 +1,25 @@
+	typedef enum {
+		DWGR_NO_PKG_IN_ARM = 1,
+		DWGR_NO_PKG_IN_AUR = 2,
+		DWGR_PKG_NOT_INSTALL = 3,
+		DWGR_READ_ARM_ERROR = 4,
+		DWGR_READ_AUR_ERROR = 5
+	} DwgrRetSatus;
+
+	typedef struct _dwgr_data {
+		char playsource[500];       // Current song
+		int playlistpos;            // Current position in playlist
+		char *artist;
+		char *title;
+		int inplaylist;             // Кол-во треков в плейлисте
+		int tracktype;              // Type of track (GuarkDecoderType)
+		int duration;            // Duration of the song
+		int current_pos;         // Current song position
+		char timestamp_string[100];
+	} dwgr_data;
+	dwgr_data DwgrData;
+	// DwgrData.state =3;
+
 	int Initialization(char *);
 	int Deinitialization();
 	int IsPackageAvailable( char *);
@@ -13,16 +35,19 @@
 	alpm_handle_t *alpm_handle;
 	alpm_db_t *db;
 	alpm_pkg_t *pkg;
+
 	char *dbpath, *tmpchar;
 	char *str, *last, *architecture, *pointer;
 	const char *pkgname;
-	
 	char full[500];
 	char tmp_string[200], package_number[2];
 	char install_command[300]; // Команда для установки
 	char install_version[30]; // Версия пакета для установки
 	const char *installed_pkg_ver;  // Текущая установленная версия
 	long int pacmanlog_length;
+	int pkg_never_upgraded, ret, loglines_counter;
+	int pkgs_in_arm, tmpint, packagesinarm, init;
+	int debug, show_list, quiet_downgrade;
 	FILE *pFile;
 
 	struct packs{ // -- Действия с пакетами из логов пакмана
@@ -34,7 +59,6 @@
 		char prev_version[50]; // предыдущая версия
 	} *pkgs;
 	//struct packs *pkgs;
-
 	struct arm_packs{ // -- список пакетов в ARM для вывода юзеру
 		char full_path[400]; // полный адрес до пакета
 		char version[20]; // Version of package
@@ -44,17 +68,10 @@
 		int pkg_release; //Package release
 	} *arm_pkgs;
 	//struct arm_packs *arm_pkgs;
-
 	struct curl_MemoryStruct {
 		char *memory;
 		size_t size;
 	};
-	
 	struct curl_MemoryStruct chunk;
-	
 	CURL *curl;
 	CURLcode result;
-
-	int pkg_never_upgraded, ret, loglines_counter;
-	int pkgs_in_arm, tmpint, packagesinarm, init;
-	int debug, show_list, quiet_downgrade;
