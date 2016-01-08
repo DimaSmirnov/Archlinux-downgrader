@@ -237,8 +237,8 @@ int ReadArm(char *package) {
 	while (counter<pkgs_in_arm) { // Get info about packages in ARM
 		strcpy(full,arm_pkgs[counter].full_path);
 		str = strtok(full, "|");
-		if (strcmp(str,"multilib-testing") || strcmp(str,"testing") ) { // Exclude packages from `testing`
-			strcpy(arm_pkgs[notest_cntr].repository,str); //printf("%d: Repo: %s\n",i, arm_pkgs[i].repository); // DEBUG
+		if (!strstr(str,"testing")) { // Exclude packages from `testing`
+			strcpy(arm_pkgs[notest_cntr].repository,str); //printf("%d: Repo: %s\n",notest_cntr, arm_pkgs[notest_cntr].repository); // DEBUG
 			str = strtok(NULL, "|");
 			strcpy(arm_pkgs[notest_cntr].name,str); //printf(", name: %s",arm_pkgs[i].name); //DEBUG
 			str = strtok(NULL, "|");
