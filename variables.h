@@ -1,28 +1,22 @@
 	typedef enum {
-		DWGR_NO_PKG_IN_ARM = 1,
-		DWGR_NO_PKG_IN_AUR = 2,
-		DWGR_PKG_NOT_INSTALL = 3,
-		DWGR_READ_ARM_ERROR = 4,
-		DWGR_READ_AUR_ERROR = 5
+		DGR_NO_PKG_IN_ARM = 1,
+		DGR_NO_PKG_IN_AUR = 2,
+		DGR_PKG_NOT_INSTALL = 3,
+		DGR_READ_ARM_ERROR = 4,
+		DGR_READ_AUR_ERROR = 5
 	} DwgrRetSatus;
 
-	typedef struct _dwgr_data {
-		char playsource[500];       // Current song
-		int playlistpos;            // Current position in playlist
-		char *artist;
-		char *title;
-		int inplaylist;             // Кол-во треков в плейлисте
-		int tracktype;              // Type of track (GuarkDecoderType)
-		int duration;            // Duration of the song
-		int current_pos;         // Current song position
-		char timestamp_string[100];
-	} dwgr_data;
-	dwgr_data DwgrData;
-	// DwgrData.state =3;
+	typedef struct _dgr_data {
+		char string1[500];
+		int int1;
+	} dgr_data;
+	dgr_data DgrData;
+	// DgrData.int1 =3;
 
 	int Initialization(char *);
 	int Deinitialization();
 	int IsPackageAvailable( char *);
+	int IsPackageInLogs( char *);
 	int IsPackageInCache( char *);
 	int IsPackageInAur( char *);
 	int CheckDowngradePossibility( char *);
@@ -30,24 +24,23 @@
 	int ReadArm(char *);
 	int IsPackageInArm( char *, char *);
 	int DowngradePackage( char *);
-	int GetChoiseForPackage( char *);
- 
+	char* GetChoiseForPackage( char *);
+ 	int dgr_output( char *);
+ 	
 	alpm_handle_t *alpm_handle;
 	alpm_db_t *db;
 	alpm_pkg_t *pkg;
 
-	char *dbpath, *tmpchar;
-	char *str, *last, *architecture, *pointer;
+	char *str, *architecture;
 	const char *pkgname;
-	char full[500];
-	char tmp_string[200], package_number[2];
+	char full_path_to_packet[300], tmp_string[200], full[500];
 	char install_command[300]; // Команда для установки
 	char install_version[30]; // Версия пакета для установки
 	const char *installed_pkg_ver;  // Текущая установленная версия
 	long int pacmanlog_length;
-	int pkg_never_upgraded, ret, loglines_counter;
+	int ret, loglines_counter;
 	int pkgs_in_arm, tmpint, packagesinarm, init;
-	int debug, show_list, quiet_downgrade;
+	int listing, silent;
 	FILE *pFile;
 
 	struct packs{ // -- Действия с пакетами из логов пакмана
