@@ -30,7 +30,9 @@
 	alpm_handle_t *alpm_handle;
 	alpm_db_t *db;
 	alpm_pkg_t *pkg;
-
+	
+	alpm_list_t *j;
+	
 	char *str, *architecture;
 	const char *pkgname;
 	char full_path_to_packet[300], tmp_string[200], full[500];
