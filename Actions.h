@@ -38,52 +38,13 @@ char* GetChoiseForPackage( char *package) {
 	return tmp_string;
 }
 int IsPackageAvailable(char *package) {
-	alpm_siglevel_t siglevel=0;
-	
-	db = alpm_get_localdb(alpm_handle);
-	pkg = alpm_db_get_pkg(db,(const char*)package);
-	pkgname = alpm_pkg_get_name(pkg);
-	if(!pkgname) return 1; // pkg not installed
-	else {
-		packagesinarm = ReadArm(package);
-		installed_pkg_ver = alpm_pkg_get_version(pkg);
-		return 0; // pkg available
-	}
-	if(pkg == NULL) {
-		switch(alpm_errno(alpm_handle)) {
-			//case ALPM_ERR_PKG_IGNORED:
-			//	printf("return 4;\n");
-			//	break;
-			//	return 2;
-			case ALPM_ERR_PKG_NOT_FOUND:
-				printf("ALPM_ERR_PKG_NOT_FOUND\n");
-				break;
-			//	return 2;
-		}
-	}
-	db = alpm_register_syncdb(alpm_handle, "core", siglevel);
-	db = alpm_register_syncdb(alpm_handle, "extra", siglevel);
-	db = alpm_register_syncdb(alpm_handle, "community", siglevel);
-	
-	alpm_list_t *sync_dbs = alpm_get_syncdbs(alpm_handle);
-	for(j = sync_dbs; j; j = alpm_list_next(j)) {
-		if(!alpm_db_get_pkg(j->data, pkgname)) {
-			printf ("wrong package name\n");
-			return 2;
-		}
-	}
-	//printf ("package remote\n");
-	//return 0;
-	
-	
-
-//	packagesinarm = ReadArm(package);
-//	if (!packagesinarm) return 2; // wrong package name
- //   if(!pkgname) return 1; // pkg not installed
- //   else {
- //       installed_pkg_ver = alpm_pkg_get_version(pkg);
- //       return 0; // pkg available
- //   }
+	packagesinarm = ReadArm(package);
+	if (!packagesinarm) return 2; // wrong package name
+    if(!pkgname) return 1; // pkg not installed
+    else {
+        installed_pkg_ver = alpm_pkg_get_version(pkg);
+        return 0; // pkg available
+    }
 }
 int CheckDowngradePossibility(char *package) {
 	ret = IsPackageAvailable(package);
@@ -109,7 +70,7 @@ int IsPackageInLogs(char *package) {
 	for (;pacmanlog_length>0;pacmanlog_length--) {
 		if (!strcmp(package,pkgs[pacmanlog_length].name) && !strcmp("upgraded",pkgs[pacmanlog_length].action)) { // found necessary package
 			if (strcmp(pkgs[pacmanlog_length].cur_version, pkgs[pacmanlog_length].prev_version)) { // if the same version - search next
-				strcpy (full_path_to_packet, PATH_TO_PACMAN_CACHE);
+				strcpy (full_path_to_packet,"/var/cache/pacman/pkg/");
 				strcat (full_path_to_packet,package);
 				strcat (full_path_to_packet,"-");
 				strcat (full_path_to_packet,pkgs[pacmanlog_length].prev_version);
@@ -123,7 +84,7 @@ int IsPackageInLogs(char *package) {
 	}
 	//printf("1: %s\n",full_path_to_packet); //DEBUG
 	strcpy(install_version,pkgs[pacmanlog_length].prev_version);
-	if(access(full_path_to_packet, F_OK) != -1) {
+	if(access(full_path_to_packet, F_OK) != -1) { // previously version available in cache
 		strcpy(tmp_string,"sudo pacman -U "); // install
 		strcat(tmp_string,full_path_to_packet);
 		strcpy(install_command,tmp_string);
@@ -134,7 +95,7 @@ int IsPackageInLogs(char *package) {
 }
 int IsPackageInCache(char *package) {
 
-	sprintf(full_path_to_packet,"%s%s-%s.pkg.tar.xz", PATH_TO_PACMAN_CACHE, package, architecture);
+	sprintf(full_path_to_packet,"/var/cache/pacman/pkg/%s-%s.pkg.tar.xz", package, architecture);
 	//printf("%s\n",full_path_to_packet); //DEBUG
 	if(access(full_path_to_packet, F_OK) != -1) { return 1; }// package in cache
 	else return 0;
@@ -316,16 +277,15 @@ int Initialization(char *package) {
 
 	arm_pkgs = calloc(1, sizeof(struct arm_packs));
 	openlog("downgrader", LOG_PID|LOG_CONS, LOG_USER);
-	
     alpm_handle = NULL;
     alpm_handle = alpm_initialize("/","/var/lib/pacman/",0);
     if(!alpm_handle) {
         dgr_output("Libalpm initialize error!\n");
         return 1;
     }
-//    db = alpm_get_localdb(alpm_handle);
-// 	pkg = alpm_db_get_pkg(db,(const char*)package);
-//    pkgname = alpm_pkg_get_name(pkg);
+    db = alpm_get_localdb(alpm_handle);
+ 	pkg = alpm_db_get_pkg(db,(const char*)package);
+    pkgname = alpm_pkg_get_name(pkg);
 
 	if(sizeof(void*) == 4) architecture = (char *)"i686"; // architecture of machine
 	else if (sizeof(void*) == 8) architecture = (char *)"x86_64";

@@ -9,8 +9,6 @@
 #include "cJSON.h"
 
 #define MAX_PKGS_FROM_ARM_FOR_USER 30
-#define PATH_TO_PACMAN_CACHE "/var/cache/pacman/pkg/"
-
 #define VERSION "1.9.0-1"
 
 #include "variables.h"
