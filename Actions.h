@@ -17,11 +17,8 @@ int DowngradePackage( char *package) {
 return 1;
 }
 char* GetChoiseForPackage( char *package) {
+	
 	tmpint=0;
-    if (init) {
-		if(!silent) printf("Pacman not initialized! Interrupted\n");
-		return (char*)-1;
-	}
 	ret = CheckDowngradePossibility(package);
 	if (ret<0) return (char*)-1;
 	
@@ -38,31 +35,48 @@ char* GetChoiseForPackage( char *package) {
 	return tmp_string;
 }
 int IsPackageAvailable(char *package) {
-	packagesinarm = ReadArm(package);
-	if (!packagesinarm) return 2; // wrong package name
-    if(!pkgname) return 1; // pkg not installed
-    else {
-        installed_pkg_ver = alpm_pkg_get_version(pkg);
-        return 0; // pkg available
-    }
+	alpm_siglevel_t siglevel=0;
+	
+	//packagesinarm = ReadArm(package);
+	db = alpm_register_syncdb(alpm_handle, "core", siglevel);
+	pkg = alpm_db_get_pkg(db,(const char*)package);
+	const char *pkgr= alpm_pkg_get_url(pkg);
+	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) {  installed_pkg_ver = alpm_pkg_get_version(pkg);  return 0; } else return 1; }
+	db = alpm_register_syncdb(alpm_handle, "extra", siglevel);
+	pkg = alpm_db_get_pkg(db,(const char*)package);
+	pkgr= alpm_pkg_get_url(pkg);
+	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) { installed_pkg_ver = alpm_pkg_get_version(pkg); return 0; } else return 1; }
+	db = alpm_register_syncdb(alpm_handle, "community", siglevel);
+	pkg = alpm_db_get_pkg(db,(const char*)package);
+	pkgr= alpm_pkg_get_url(pkg);
+	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) { installed_pkg_ver = alpm_pkg_get_version(pkg); return 0; } else return 1; }
+	return 2;
+	
+// return 0 - pkg available
+// return 1 - pkg not installed
+// return 2 - wrong pkg name
+}
+
+int IsPackageInstalled(char *package) {
+	
+	db = alpm_get_localdb(alpm_handle);
+ 	pkg = alpm_db_get_pkg(db,(const char*)package);
+    if (alpm_pkg_get_name(pkg)) return 1;
+    else return 0;
 }
 int CheckDowngradePossibility(char *package) {
+
 	ret = IsPackageAvailable(package);
-	if (ret==2) { // пакета нет в АРМ
-		int ret1 = IsPackageInAur(package); // тогда проверяем АУР
-		if (ret1>0) { // Package in aur, terminate
-			if(!silent) { sprintf(tmp_string, "Package '%s' in AUR. Downgrade impossible.\n", package); dgr_output(tmp_string); return -1; }
-		}
-		else if(ret1<0) { // inet error while ARM read
-			if(!silent) { dgr_output("Please check you internet connection. Can`t read AUR\n"); return -1; }
-		}
-		else { // Пакета нет в АРМ и нет в АУР
-			if(!silent) { sprintf(tmp_string, "Package '%s' not available. Please check package name\n", package); dgr_output(tmp_string); return -1; }
-		}
+	if (ret==2) { // Wrong package name
+		int ret1 = IsPackageInAur(package); // check AUR
+		if (ret1>0) { if(!silent) { sprintf(tmp_string, "Package '%s' in AUR. Downgrade impossible.\n", package); dgr_output(tmp_string); return -1; } }
+		else { if(!silent) { sprintf(tmp_string, "Package '%s' not available. Please check package name\n", package); dgr_output(tmp_string); return -1; } }
 	}
 	else if (ret==1) {  // Пакет не установлен
 		if(!silent) { sprintf(tmp_string, "Package '%s' not installed.\n", package); dgr_output(tmp_string); return -1; }
 	}
+	packagesinarm = ReadArm(package);
+	if(packagesinarm<0) { if(!silent) { dgr_output("Please check you internet connection. Can`t read ARM\n"); return -1; } }
 	return 0;
 }
 int IsPackageInLogs(char *package) {

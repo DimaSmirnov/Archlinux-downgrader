@@ -19,10 +19,12 @@
 	int IsPackageInLogs( char *);
 	int IsPackageInCache( char *);
 	int IsPackageInAur( char *);
+	int IsPackageInArm( char *, char *);
+	int IsPackageInstalled(char *);
 	int CheckDowngradePossibility( char *);
 	void ReadPacmanLog();
 	int ReadArm(char *);
-	int IsPackageInArm( char *, char *);
+	
 	int DowngradePackage( char *);
 	char* GetChoiseForPackage( char *);
  	int dgr_output( char *);
