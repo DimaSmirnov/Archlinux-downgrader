@@ -41,7 +41,7 @@
 	const char *installed_pkg_ver;  // Текущая установленная версия
 	long int pacmanlog_length;
 	int ret, loglines_counter;
-	int pkgs_in_arm, tmpint, packagesinarm, init;
+	int tmpint, pkgsinarm, init;
 	int listing, silent;
 	FILE *pFile;
 

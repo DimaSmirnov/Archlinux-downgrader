@@ -21,8 +21,8 @@ char* GetChoiseForPackage( char *package) {
 	tmpint=0;
 	ret = CheckDowngradePossibility(package);
 	if (ret<0) return (char*)-1;
-	
-	for (int i=1;i<=MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgs_in_arm;i++) {
+	if (!pkgsinarm) { dgr_output ("Please check you internet connection and try again later. Can`t read ARM!\n "); return "q";}
+	for (int i=1;i<=MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgsinarm;i++) {
 		sprintf(tmp_string,"%s-%s", arm_pkgs[i].name, arm_pkgs[i].version);
 		ret = IsPackageInCache(tmp_string);
 		sprintf(tmp_string, "%d: %s-%s", i, arm_pkgs[i].name, arm_pkgs[i].version); dgr_output(tmp_string);
@@ -30,15 +30,14 @@ char* GetChoiseForPackage( char *package) {
 		else if (ret==1) dgr_output(" (from cache)\n");
 		else dgr_output(" (from ARM)\n");
 	}
-	if (!pkgs_in_arm) { dgr_output ("Please check you internet connection and try again later. Can`t read ARM!\n "); return "q";}
+	
 	dgr_output (">> Please enter package number, [q] to quit ");
 	scanf ("%s",tmp_string);
 	return tmp_string;
 }
 int IsPackageAvailable(char *package) {
 	alpm_siglevel_t siglevel=0;
-	
-	//packagesinarm = ReadArm(package);
+
 	db = alpm_register_syncdb(alpm_handle, "core", siglevel);
 	pkg = alpm_db_get_pkg(db,(const char*)package);
 	const char *pkgr= alpm_pkg_get_url(pkg);
@@ -76,8 +75,7 @@ int CheckDowngradePossibility(char *package) {
 	else if (ret==1) {  // Пакет не установлен
 		if(!silent) { sprintf(tmp_string, "Package '%s' not installed.\n", package); dgr_output(tmp_string); return -1; }
 	}
-	packagesinarm = ReadArm(package);
-	if(packagesinarm<0) { if(!silent) { dgr_output("Please check you internet connection. Can`t read ARM\n"); return -1; } }
+	pkgsinarm = ReadArm(package);
 	return 0;
 }
 int IsPackageInLogs(char *package) {
@@ -229,10 +227,10 @@ int ReadArm(char *package) {
 
 	char *pch = strchr(str,'\n');
 	while (pch!=NULL) { counter++;  pch=strchr(pch+1,'\n'); }
-	//if(!quiet_downgrade) { sprintf(tmp_string, "1. Packages in ARM: %d (with testing)\n",counter); dgr_output(tmp_string); } // DEBUG
+	//sprintf(tmp_string, "1. Packages in ARM: %d (with testing)\n",counter); dgr_output(tmp_string); // DEBUG
 	arm_pkgs = realloc(arm_pkgs, (counter+1)*sizeof(struct arm_packs));
-	pkgs_in_arm = counter;
-	if (!pkgs_in_arm) return 0;
+	pkgsinarm = counter;
+	if (!pkgsinarm) return 0;
 	counter=0;
 	str = chunk.memory;
 	str = strtok(str, "\n");
@@ -244,7 +242,7 @@ int ReadArm(char *package) {
 	}
 	counter=0;
 	int notest_cntr=1;
-	while (counter<pkgs_in_arm) { // Get info about packages in ARM
+	while (counter<pkgsinarm) { // Get info about packages in ARM
 		str = strtok(arm_pkgs[counter].full_path, "|");
 		if (!strstr(str,"testing")) { // Exclude packages from `testing`
 			//printf("%d: string: %s\n",notest_cntr, arm_pkgs[counter].full_path); // DEBUG
@@ -263,11 +261,11 @@ int ReadArm(char *package) {
 		}
 		counter++;
 	}
-	pkgs_in_arm = notest_cntr-1;
+	pkgsinarm = notest_cntr-1;
 	//if(!quiet_downgrade) { sprintf(tmp_string, "2. Packages in ARM: %d (without testing)\n",pkgs_in_arm); dgr_output(tmp_string); } // DEBUG
 	free(chunk.memory);
 
-return pkgs_in_arm;
+return pkgsinarm;
 }
 int IsPackageInArm( char *package, char *version) {
 	int arm_flag=0;
