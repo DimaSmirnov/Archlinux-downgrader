@@ -17,18 +17,12 @@ int DowngradePackage( char *package) {
 return 1;
 }
 char* GetChoiseForPackage( char *package) {
+
+	int showpkgs = PrepareView(package); // Готовим массив со списком пакетов для отображения пользователю
 	
-	tmpint=0;
-	ret = CheckDowngradePossibility(package);
-	if (ret<0) return (char*)-1;
-	if (!pkgsinarm) { dgr_output ("Please check you internet connection and try again later. Can`t read ARM!\n "); return "q";}
-	for (int i=1;i<=MAX_PKGS_FROM_ARM_FOR_USER && i<=pkgsinarm;i++) {
-		sprintf(tmp_string,"%s-%s", arm_pkgs[i].name, arm_pkgs[i].version);
-		ret = IsPackageInCache(tmp_string);
-		sprintf(tmp_string, "%d: %s-%s", i, arm_pkgs[i].name, arm_pkgs[i].version); dgr_output(tmp_string);
-		if (!strcmp(arm_pkgs[i].version, installed_pkg_ver)) dgr_output(" [installed]\n");
-		else if (ret==1) dgr_output(" (from cache)\n");
-		else dgr_output(" (from ARM)\n");
+	for (int i=1;i<=MAX_PKGS_FOR_USER && i<=showpkgs;i++) {
+		sprintf(tmp_string, "%d: %s-%s %s\n", i, user_pkgs[i].name, user_pkgs[i].version, user_pkgs[i].repo); 
+		dgr_output(tmp_string);
 	}
 	
 	dgr_output (">> Please enter package number, [q] to quit ");
@@ -64,20 +58,62 @@ int IsPackageInstalled(char *package) {
     if (alpm_pkg_get_name(pkg)) return 1;
     else return 0;
 }
-int CheckDowngradePossibility(char *package) {
 
-	ret = IsPackageAvailable(package);
-	if (ret==2) { // Wrong package name
-		int ret1 = IsPackageInAur(package); // check AUR
-		if (ret1>0) { if(!silent) { sprintf(tmp_string, "Package '%s' in AUR. Downgrade impossible.\n", package); dgr_output(tmp_string); return -1; } }
-		else { if(!silent) { sprintf(tmp_string, "Package '%s' not available. Please check package name\n", package); dgr_output(tmp_string); return -1; } }
+int PrepareView(char *package) {
+	int cntr=0;
+	
+	if (WITH_ALA && pkgsinala) { // Создаем список пакетов для вывода по ALA
+		user_pkgs = realloc(ala_pkgs, pkgsinala*sizeof(struct user_packs));
+		while (pkgsinala) {
+			strcpy(user_pkgs[cntr].name,ala_pkgs[pkgsinala].name);
+			strcpy(user_pkgs[cntr].version,ala_pkgs[pkgsinala].version);
+			
+			sprintf(tmp_string,"%s-%s", user_pkgs[cntr].name, user_pkgs[cntr].version);
+			ret = IsPackageInCache(tmp_string);			
+			if (!strcmp(user_pkgs[cntr].version, installed_pkg_ver)) {
+				if (ret==1) strcpy(user_pkgs[cntr].link,full_path_to_packet);
+				else strcpy(user_pkgs[cntr].link,ala_pkgs[pkgsinala].full_path);
+				strcpy(user_pkgs[cntr].repo," [installed]");
+			}
+			else if (ret==1) {
+				strcpy(user_pkgs[cntr].link,full_path_to_packet);
+				strcpy(user_pkgs[cntr].repo," (from cache)");
+			}
+			else {
+				strcpy(user_pkgs[cntr].link,ala_pkgs[pkgsinala].full_path);
+				strcpy(user_pkgs[cntr].repo," (from ALA)");
+			}
+			cntr++;
+			pkgsinala--;
+		}
 	}
-	else if (ret==1) {  // Пакет не установлен
-		if(!silent) { sprintf(tmp_string, "Package '%s' not installed.\n", package); dgr_output(tmp_string); return -1; }
+	else if 	(WITH_ARM && pkgsinarm) { // Создаем список пакетов для вывода по ARM
+		user_pkgs = realloc(ala_pkgs, pkgsinarm*sizeof(struct user_packs));
+		while (pkgsinarm) {
+			strcpy(user_pkgs[cntr].name,arm_pkgs[cntr].name);
+			strcpy(user_pkgs[cntr].version,arm_pkgs[cntr].version);
+			
+			sprintf(tmp_string,"%s-%s", user_pkgs[cntr].name, user_pkgs[cntr].version);
+			ret = IsPackageInCache(tmp_string);
+			if (!strcmp(user_pkgs[cntr].version, installed_pkg_ver)) {
+				if (ret==1) strcpy(user_pkgs[cntr].link,full_path_to_packet);
+				else strcpy(user_pkgs[cntr].link,ala_pkgs[cntr].full_path);
+				strcpy(user_pkgs[cntr].repo," [installed]");
+			}
+			else if (ret==1) {
+				strcpy(user_pkgs[cntr].link,full_path_to_packet);
+				strcpy(user_pkgs[cntr].repo," (from cache)");
+			}
+			else {
+				strcpy(user_pkgs[cntr].link,arm_pkgs[cntr].full_path);
+				strcpy(user_pkgs[cntr].repo," (from ARM)");
+			}
+			cntr++;
+		}		
 	}
-	pkgsinarm = ReadArm(package);
-	return 0;
+return cntr-1;
 }
+
 int IsPackageInLogs(char *package) {
 
 	for (;pacmanlog_length>0;pacmanlog_length--) {
@@ -154,6 +190,7 @@ int IsPackageInAur(char *package) {
 	if(chunk.memory) free(chunk.memory);
   	return 0; // package not in AUR
 }
+
 void ReadPacmanLog() {
 	char *buff = NULL;
 	size_t len;
@@ -201,116 +238,57 @@ void ReadPacmanLog() {
 	fclose(pFile);
 	pacmanlog_length =loglines_counter;
 }
-int ReadArm(char *package) {
-	int counter;
 
-	if(sizeof(void*) == 4) { architecture = (char *)"i686";  }
-	else if (sizeof(void*) == 8) { architecture = (char *)"x86_64"; }
-	
-	chunk.memory = malloc(1);
-	chunk.size = 0;
-	curl_global_init(CURL_GLOBAL_ALL);
-	curl = curl_easy_init();
-	sprintf (tmp_string,"http://repo-arm.archlinuxcn.org/search?arch=%s&pkgname=%s",architecture,package);
-	curl_easy_setopt(curl, CURLOPT_URL, tmp_string);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_handler);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
-	result = curl_easy_perform(curl);
-	if(result != CURLE_OK) {
-		dgr_output ("Please check you internet connection. ARM reading error\n");
-		return -1; // Exit with error
-	}		
-	curl_easy_cleanup(curl);
-	curl_global_cleanup();
-	counter=0;
-	str = chunk.memory;
-
-	char *pch = strchr(str,'\n');
-	while (pch!=NULL) { counter++;  pch=strchr(pch+1,'\n'); }
-	//sprintf(tmp_string, "1. Packages in ARM: %d (with testing)\n",counter); dgr_output(tmp_string); // DEBUG
-	arm_pkgs = realloc(arm_pkgs, (counter+1)*sizeof(struct arm_packs));
-	pkgsinarm = counter;
-	if (!pkgsinarm) return 0;
-	counter=0;
-	str = chunk.memory;
-	str = strtok(str, "\n");
-	strcpy(arm_pkgs[counter].full_path,str);
-	counter++;
-	for (;str = strtok(NULL, "\n"); counter++) { 
-		strcpy(arm_pkgs[counter].full_path,str); 
-		//printf("%d: string: %s\n",counter, arm_pkgs[counter].full_path); // DEBUG
-	}
-	counter=0;
-	int notest_cntr=1;
-	while (counter<pkgsinarm) { // Get info about packages in ARM
-		str = strtok(arm_pkgs[counter].full_path, "|");
-		if (!strstr(str,"testing")) { // Exclude packages from `testing`
-			//printf("%d: string: %s\n",notest_cntr, arm_pkgs[counter].full_path); // DEBUG
-			strcpy(arm_pkgs[notest_cntr].repository,str); 
-			str = strtok(NULL, "|");
-			strcpy(arm_pkgs[notest_cntr].name,str);
-			str = strtok(NULL, "|");
-			str = strtok(NULL, "|");
-			strcpy(arm_pkgs[notest_cntr].version,str);
-			str = strtok(NULL, "|");
-			strcpy(arm_pkgs[notest_cntr].link,str);
-			str = strtok(NULL, "|");
-			arm_pkgs[notest_cntr].pkg_release=atoi(str);
-			if (notest_cntr==MAX_PKGS_FROM_ARM_FOR_USER) break;
-			notest_cntr++;
-		}
-		counter++;
-	}
-	pkgsinarm = notest_cntr-1;
-	//if(!quiet_downgrade) { sprintf(tmp_string, "2. Packages in ARM: %d (without testing)\n",pkgs_in_arm); dgr_output(tmp_string); } // DEBUG
-	free(chunk.memory);
-
-return pkgsinarm;
-}
-int IsPackageInArm( char *package, char *version) {
-	int arm_flag=0;
-	char t_pack[100];
-	
-	sprintf(t_pack,"%s-%s",package,version);
-	for(tmpint=0;strlen(arm_pkgs[tmpint].full_path)>0;tmpint++) {
-		if (strstr(arm_pkgs[tmpint].full_path,t_pack)) {
-			arm_flag=1;
-			break;
-		}
-	}
-	if (arm_flag==1) return tmpint;
-	else return 0;
-}
 int dgr_output(char *string) {
 	printf("%s",string);
 	
 	return 0;
 }
+
 int Initialization(char *package) {
 
-	arm_pkgs = calloc(1, sizeof(struct arm_packs));
 	openlog("downgrader", LOG_PID|LOG_CONS, LOG_USER);
     alpm_handle = NULL;
     alpm_handle = alpm_initialize("/","/var/lib/pacman/",0);
-    if(!alpm_handle) {
-        dgr_output("Libalpm initialize error!\n");
-        return 1;
-    }
+    if(!alpm_handle) { dgr_output("Libalpm initialize error!\n"); return 1; }
     db = alpm_get_localdb(alpm_handle);
  	pkg = alpm_db_get_pkg(db,(const char*)package);
     pkgname = alpm_pkg_get_name(pkg);
 
 	if(sizeof(void*) == 4) architecture = (char *)"i686"; // architecture of machine
 	else if (sizeof(void*) == 8) architecture = (char *)"x86_64";
+	user_pkgs = calloc(1, sizeof(struct user_packs));
+	
+	ret = IsPackageAvailable(package);
+	if (ret==2) { // Wrong package name
+		int ret1 = IsPackageInAur(package); // check AUR
+		if (ret1>0) { if(!silent) { sprintf(tmp_string, "Package '%s' in AUR. Downgrade impossible.\n", package); dgr_output(tmp_string); return 1; } }
+		else { if(!silent) { sprintf(tmp_string, "Package '%s' not available. Please check package name\n", package); dgr_output(tmp_string); return 1; } }
+	}
+	else if (ret==1) { if(!silent) { sprintf(tmp_string, "Package '%s' not installed.\n", package); dgr_output(tmp_string); return 1; } }
 	
     ReadPacmanLog();
-
+    
+	if (WITH_ALA) {
+		ala_pkgs = calloc(1, sizeof(struct ala_packs));
+		pkgsinala = ReadALA(package);
+		if (!pkgsinala) dgr_output ("No packages in ALA! Disable\n");
+	}	
+	if (WITH_ARM) {
+		arm_pkgs = calloc(1, sizeof(struct arm_packs));
+		pkgsinarm = ReadArm(package);
+		if (!pkgsinarm) dgr_output ("No packages in ARM! Disable\n");
+	}
+	if (!pkgsinala && !pkgsinarm) { dgr_output ("No source for packages. Terminating\n"); return 1; }
     return 0;
 }
+
 int Deinitialization() {
 	alpm_release(alpm_handle);
 	free (pkgs);
-	free (arm_pkgs);
+	free (user_pkgs);
+	if (pkgsinarm) free (arm_pkgs);
+	if (pkgsinala) free (ala_pkgs);
 	closelog();
 	return 0;
 }

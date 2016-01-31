@@ -21,10 +21,11 @@
 	int IsPackageInAur( char *);
 	int IsPackageInArm( char *, char *);
 	int IsPackageInstalled(char *);
-	int CheckDowngradePossibility( char *);
 	void ReadPacmanLog();
 	int ReadArm(char *);
-	
+	int ReadALA(char *);
+	int IsPackageInAla(char*, char *);
+	int PrepareView(char *);
 	int DowngradePackage( char *);
 	char* GetChoiseForPackage( char *);
  	int dgr_output( char *);
@@ -41,8 +42,8 @@
 	const char *installed_pkg_ver;  // Текущая установленная версия
 	long int pacmanlog_length;
 	int ret, loglines_counter;
-	int tmpint, pkgsinarm, init;
-	int listing, silent;
+	int tmpint, pkgsinarm, pkgsinala, pkginala, init;
+	int single, silent, counter;
 	FILE *pFile;
 
 	struct packs{ // -- Действия с пакетами из логов пакмана
@@ -54,7 +55,7 @@
 		char prev_version[50]; // предыдущая версия
 	} *pkgs;
 	//struct packs *pkgs;
-	struct arm_packs{ // -- список пакетов в ARM для вывода юзеру
+	struct arm_packs{ // -- список пакетов в ARM
 		char full_path[400]; // полный адрес до пакета
 		char version[20]; // Version of package
 		char name[50]; // Name of package
@@ -63,6 +64,21 @@
 		int pkg_release; //Package release
 	} *arm_pkgs;
 	//struct arm_packs *arm_pkgs;
+	struct ala_packs{ // -- список пакетов в ALA
+		char full_path[400]; // полный адрес до пакета
+		char name[50]; // Name of package (with version and release)
+		char version[10]; // Version of package
+		char full_name[50]; // Name of package with version and .tar.xz
+	} *ala_pkgs;
+	//struct ala_packs *ala_pkgs;
+	struct user_packs{ // -- Список пакетов для вывода пользователю
+		char name[40]; // название пакета
+		char version[20]; // Version of package
+		char link[100]; //Link for download
+		char repo[20]; // ARM, ALA, Cache
+	} *user_pkgs;
+	//struct user_packs *user_pkgs;
+	
 	struct curl_MemoryStruct {
 		char *memory;
 		size_t size;
