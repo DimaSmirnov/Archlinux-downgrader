@@ -20,8 +20,6 @@
 #include "ala.c"
 #include "arm.c"
 
-// git checkout -b testing
-
 int main(int argc, char **argv) {
 	char *package;
 	int param, single=0;
@@ -55,7 +53,7 @@ int main(int argc, char **argv) {
 		sprintf (full, "\033[1;%dm %s \033[0m \n", 31, tmp_string);
 		dgr_output(full);
 		str = GetChoiseForPackage(package);
-		if (!strcmp(str,"q")) { Deinitialization(); return 0; }
+		if (!strcmp(str,"q")) {Deinitialization(); return 0; }
 		else pac_num = atoi(str);
 		strcpy(install_command,"sudo pacman -U "); strcat(install_command, user_pkgs[pac_num].link);
 		//printf ("%s\n",install_command); // DEBUG

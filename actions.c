@@ -61,9 +61,9 @@ int IsPackageInstalled(char *package) {
 
 int PrepareView(char *package) {
 	int cntr=0;
+	user_pkgs = realloc(user_pkgs, (pkgsinala+1+pkgsinarm)*sizeof(struct user_packs));
 	
 	if (WITH_ALA && pkgsinala) { // Создаем список пакетов для вывода по ALA
-		user_pkgs = realloc(ala_pkgs, pkgsinala*sizeof(struct user_packs));
 		while (pkgsinala) {
 			strcpy(user_pkgs[cntr].name,ala_pkgs[pkgsinala].name);
 			strcpy(user_pkgs[cntr].version,ala_pkgs[pkgsinala].version);
@@ -71,8 +71,7 @@ int PrepareView(char *package) {
 			sprintf(tmp_string,"%s-%s", user_pkgs[cntr].name, user_pkgs[cntr].version);
 			ret = IsPackageInCache(tmp_string);			
 			if (!strcmp(user_pkgs[cntr].version, installed_pkg_ver)) {
-				if (ret==1) strcpy(user_pkgs[cntr].link,full_path_to_packet);
-				else strcpy(user_pkgs[cntr].link,ala_pkgs[pkgsinala].full_path);
+				strcpy(user_pkgs[cntr].link,ala_pkgs[pkgsinala].full_path);
 				strcpy(user_pkgs[cntr].repo," [installed]");
 			}
 			else if (ret==1) {
@@ -87,8 +86,7 @@ int PrepareView(char *package) {
 			pkgsinala--;
 		}
 	}
-	else if 	(WITH_ARM && pkgsinarm) { // Создаем список пакетов для вывода по ARM
-		user_pkgs = realloc(ala_pkgs, pkgsinarm*sizeof(struct user_packs));
+	if 	(WITH_ARM && pkgsinarm) { // Создаем список пакетов для вывода по ARM
 		while (pkgsinarm) {
 			strcpy(user_pkgs[cntr].name,arm_pkgs[cntr].name);
 			strcpy(user_pkgs[cntr].version,arm_pkgs[cntr].version);
