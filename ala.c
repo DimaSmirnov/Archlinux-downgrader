@@ -28,8 +28,8 @@ int ReadALA(char *package) {
 	str = chunk.memory;
 	char *pch = strstr(str,tmp_string);
 	while (pch!=NULL) { pkginala++;  pch = strstr(pch+3,tmp_string); }
-	pkginala = pkginala/4;
-	ala_pkgs = realloc(ala_pkgs, pkginala*sizeof(struct ala_packs));
+	pkginala = pkginala/2;
+	ala_pkgs = realloc(ala_pkgs, (pkginala+1)*sizeof(struct ala_packs));
 	//sprintf(tmp_string2, "Packages in ALA: %d\n",pkginala); dgr_output(tmp_string2); // DEBUG
 	if (pkginala<1) return 0;
 	

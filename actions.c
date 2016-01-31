@@ -35,15 +35,21 @@ int IsPackageAvailable(char *package) {
 	db = alpm_register_syncdb(alpm_handle, "core", siglevel);
 	pkg = alpm_db_get_pkg(db,(const char*)package);
 	const char *pkgr= alpm_pkg_get_url(pkg);
-	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) {  installed_pkg_ver = alpm_pkg_get_version(pkg);  return 0; } else return 1; }
+	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) {  installed_pkg_ver = alpm_pkg_get_version(pkg);
+		//printf ("installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
+		return 0; } else return 1; }
 	db = alpm_register_syncdb(alpm_handle, "extra", siglevel);
 	pkg = alpm_db_get_pkg(db,(const char*)package);
 	pkgr= alpm_pkg_get_url(pkg);
-	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) { installed_pkg_ver = alpm_pkg_get_version(pkg); return 0; } else return 1; }
+	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) { installed_pkg_ver = alpm_pkg_get_version(pkg);
+		//printf ("installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
+		return 0; } else return 1; }
 	db = alpm_register_syncdb(alpm_handle, "community", siglevel);
 	pkg = alpm_db_get_pkg(db,(const char*)package);
 	pkgr= alpm_pkg_get_url(pkg);
-	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) { installed_pkg_ver = alpm_pkg_get_version(pkg); return 0; } else return 1; }
+	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) { installed_pkg_ver = alpm_pkg_get_version(pkg);
+		//printf ("installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
+		return 0; } else return 1; }
 	return 2;
 	
 // return 0 - pkg available
@@ -61,15 +67,18 @@ int IsPackageInstalled(char *package) {
 
 int PrepareView(char *package) {
 	int cntr=0;
-	user_pkgs = realloc(user_pkgs, (pkgsinala+1+pkgsinarm)*sizeof(struct user_packs));
+	user_pkgs = realloc(user_pkgs, (pkgsinala+2+pkgsinarm)*sizeof(struct user_packs));
 	
 	if (WITH_ALA && pkgsinala) { // Создаем список пакетов для вывода по ALA
+		//pkgsinala++;
 		while (pkgsinala) {
 			strcpy(user_pkgs[cntr].name,ala_pkgs[pkgsinala].name);
 			strcpy(user_pkgs[cntr].version,ala_pkgs[pkgsinala].version);
 			
 			sprintf(tmp_string,"%s-%s", user_pkgs[cntr].name, user_pkgs[cntr].version);
-			ret = IsPackageInCache(tmp_string);			
+			//printf ("tmp_string: %s\n", tmp_string); //DEBUG
+			ret = IsPackageInCache(tmp_string);
+			//printf ("installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
 			if (!strcmp(user_pkgs[cntr].version, installed_pkg_ver)) {
 				strcpy(user_pkgs[cntr].link,ala_pkgs[pkgsinala].full_path);
 				strcpy(user_pkgs[cntr].repo," [installed]");
@@ -264,7 +273,7 @@ int Initialization(char *package) {
 		else { if(!silent) { sprintf(tmp_string, "Package '%s' not available. Please check package name\n", package); dgr_output(tmp_string); return 1; } }
 	}
 	else if (ret==1) { if(!silent) { sprintf(tmp_string, "Package '%s' not installed.\n", package); dgr_output(tmp_string); return 1; } }
-	
+	pkgsinala=pkgsinarm=0;
     ReadPacmanLog();
     
 	if (WITH_ALA) {
