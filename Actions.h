@@ -30,6 +30,7 @@ char* GetChoiseForPackage( char *package) {
 		else if (ret==1) dgr_output(" (from cache)\n");
 		else dgr_output(" (from ARM)\n");
 	}
+	if (!pkgs_in_arm) { dgr_output ("Please check you internet connection and try again later. Can`t read ARM!\n "); return (char*)-1;}
 	dgr_output (">> Please enter package number, [q] to quit ");
 	scanf ("%s",tmp_string);
 	return tmp_string;
