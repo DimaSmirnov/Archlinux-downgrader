@@ -39,7 +39,7 @@
 	char full_path_to_packet[300], tmp_string[200], full[500];
 	char install_command[300]; // Команда для установки
 	char install_version[30]; // Версия пакета для установки
-	const char *installed_pkg_ver;  // Текущая установленная версия
+	const char* installed_pkg_ver;  // Текущая установленная версия
 	long int pacmanlog_length;
 	int ret, loglines_counter;
 	int tmpint, pkgsinarm, pkgsinala, pkginala, init;
