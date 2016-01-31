@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 		if (!strcmp(str,"q")) { Deinitialization(); return 0; }
 		else pac_num = atoi(str);
 		strcpy(install_command,"sudo pacman -U "); strcat(install_command, user_pkgs[pac_num].link);
-		printf ("%s\n",install_command); // DEBUG
+		//printf ("%s\n",install_command); // DEBUG
 		system(install_command);
 	}
 	Deinitialization();
