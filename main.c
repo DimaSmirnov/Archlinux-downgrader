@@ -36,7 +36,6 @@ int main(int argc, char **argv) {
 	}
 	init = Initialization(package);
 	if (init) return -1;
-	
 
 	if (single) { // Downgrade single package
 		sprintf(tmp_string,"Downgrade package: %s",package);
