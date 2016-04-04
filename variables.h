@@ -28,12 +28,14 @@
 	int PrepareView(char *);
 	int DowngradePackage( char *);
 	char* GetChoiseForPackage( char *);
+	char* str_replace(char*,char*,char*);
  	int dgr_output( char *);
  	
 	alpm_handle_t *alpm_handle;
 	alpm_db_t *db;
 	alpm_pkg_t *pkg;
-
+	
+	char *ptr, *i_com;
 	char *str, *architecture;
 	const char *pkgname;
 	char full_path_to_packet[300], tmp_string[200], full[500];

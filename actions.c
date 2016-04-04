@@ -7,12 +7,24 @@ int DowngradePackage( char *package) {
 		return 0;
 	}
 	strcpy(install_version,installed_pkg_ver);
-	ret = IsPackageInArm(package, install_version);
-	if (arm_pkgs[ret].link) {
-		if (!silent) { sprintf(tmp_string, "Downgrade %s from ARM to version %s\n", package,arm_pkgs[ret+2].version); dgr_output(tmp_string); }
-		strcpy(install_command,"sudo pacman -U "); strcat(install_command,arm_pkgs[ret+2].link);
+	if (WITH_ALA) {
+		int showpkgs = PrepareView(package);
+		int i=1;
+		//sprintf(tmp_string, "%d: %s-%s %s\n", i+1, user_pkgs[i].name, user_pkgs[i].version, user_pkgs[i].repo); dgr_output(tmp_string);		
+		if (!silent) { sprintf(tmp_string, "Downgrade %s from ALA to version %s\n", package,user_pkgs[i].version); dgr_output(tmp_string); }
+		strcpy(install_command,"sudo pacman -U "); strcat(install_command,user_pkgs[i].link);
+		//printf("%s\n", install_command); //DEBUG
 		system(install_command);
 		return 0;
+	}
+	if (WITH_ARM) {
+		ret = IsPackageInArm(package, install_version);
+		if (arm_pkgs[ret].link) {
+			if (!silent) { sprintf(tmp_string, "Downgrade %s from ARM to version %s\n", package,arm_pkgs[ret+2].version); dgr_output(tmp_string); }
+			strcpy(install_command,"sudo pacman -U "); strcat(install_command,arm_pkgs[ret+2].link);
+			system(install_command);
+			return 0;
+		}	
 	}
 return 1;
 }
@@ -145,6 +157,11 @@ int IsPackageInLogs(char *package) {
 	}
 	//printf("1: %s\n",full_path_to_packet); //DEBUG
 	strcpy(install_version,pkgs[pacmanlog_length].prev_version);
+	
+	ptr = full_path_to_packet;
+	i_com = str_replace(ptr,":","%3A");
+	strcpy(full_path_to_packet,i_com); // unescape symbol ":" for pkg "go" for example
+	
 	if(access(full_path_to_packet, F_OK) != -1) { // previously version available in cache
 		strcpy(tmp_string,"sudo pacman -U "); // install
 		strcat(tmp_string,full_path_to_packet);
@@ -158,7 +175,12 @@ int IsPackageInLogs(char *package) {
 int IsPackageInCache(char *package) {
 
 	sprintf(full_path_to_packet,"/var/cache/pacman/pkg/%s-%s.pkg.tar.xz", package, architecture);
+	
+	ptr = full_path_to_packet;
+	i_com = str_replace(ptr,":","%3A"); 
+	strcpy(full_path_to_packet,i_com); // unescape symbol ":" for pkg "go" for example
 	//printf("%s\n",full_path_to_packet); //DEBUG
+	
 	if(access(full_path_to_packet, F_OK) != -1) { return 1; }// package in cache
 	else return 0;
 }
