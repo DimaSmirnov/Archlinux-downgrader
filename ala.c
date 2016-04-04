@@ -43,7 +43,7 @@ int ReadALA(char *package) {
 			if (ptr=strstr(fullpkg,architecture)) {
 				strcpy(ala_pkgs[counter].full_name,fullpkg); //printf("%d: ala_pkgs[counter].full_name = %s\n",counter, ala_pkgs[counter].full_name); // DEBUG
 				sprintf(tmp_string2,"%s%s",ala_path, fullpkg);
-				strcpy(ala_pkgs[counter].full_path,tmp_string2); printf("%d: ala_pkgs[counter].full_path = %s\n",counter, ala_pkgs[counter].full_path); // DEBUG
+				strcpy(ala_pkgs[counter].full_path,tmp_string2); //printf("%d: ala_pkgs[counter].full_path = %s\n",counter, ala_pkgs[counter].full_path); // DEBUG
 				int a = strlen(package); strcpy(tmp_string2,fullpkg); tmp_string2[a]='\0';
 				strcpy(ala_pkgs[counter].name,tmp_string2); //printf("%d: ala_pkgs[counter].name = %s\n",counter, ala_pkgs[counter].name); // DEBUG
 				a=ptr-fullpkg; fullpkg[a-1] = '\0'; a = strlen(package); fullpkg = fullpkg+a+1;
