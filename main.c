@@ -11,7 +11,7 @@
 #define MAX_PKGS_FOR_USER 30
 #define WITH_ALA 1
 #define WITH_ARM 0
-#define VERSION "2.0.0-1"
+#define VERSION "2.0.0-2"
 
 
 #include "variables.h"
@@ -52,9 +52,10 @@ int main(int argc, char **argv) {
 		sprintf (full, "\033[1;%dm %s \033[0m \n", 31, tmp_string);
 		dgr_output(full);
 		str = GetChoiseForPackage(package);
-		if (!strcmp(str,"q")) {Deinitialization(); return 0; }
+		if (!strcmp(str,"q")) { Deinitialization(); return 0; }
 		else pac_num = atoi(str);
-		strcpy(install_command,"sudo pacman -U "); strcat(install_command, user_pkgs[pac_num].link);
+		if (pac_num>MAX_PKGS_FOR_USER) { Deinitialization(); return 0; }
+		strcpy(install_command,"sudo pacman -U "); strcat(install_command, user_pkgs[pac_num-1].link);
 		//printf ("%s\n",install_command); // DEBUG
 		system(install_command);
 	}

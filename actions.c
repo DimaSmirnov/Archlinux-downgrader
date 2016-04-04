@@ -20,9 +20,10 @@ char* GetChoiseForPackage( char *package) {
 
 	int showpkgs = PrepareView(package); // Готовим массив со списком пакетов для отображения пользователю
 	
-	for (int i=1;i<=MAX_PKGS_FOR_USER && i<=showpkgs;i++) {
-		sprintf(tmp_string, "%d: %s-%s %s\n", i, user_pkgs[i].name, user_pkgs[i].version, user_pkgs[i].repo); 
+	for (int i=0;i<=MAX_PKGS_FOR_USER && i<=showpkgs;i++) {
+		sprintf(tmp_string, "%d: %s-%s %s\n", i+1, user_pkgs[i].name, user_pkgs[i].version, user_pkgs[i].repo); 
 		dgr_output(tmp_string);
+		//sprintf(tmp_string, "%s\n", i, user_pkgs[i].link); dgr_output(tmp_string); //DEBUG
 	}
 	
 	dgr_output (">> Please enter package number, [q] to quit ");
@@ -67,20 +68,24 @@ int IsPackageInstalled(char *package) {
 
 int PrepareView(char *package) {
 	int cntr=0;
+	
+	counter--;
 	user_pkgs = realloc(user_pkgs, (pkgsinala+2+pkgsinarm)*sizeof(struct user_packs));
+	//printf ("installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
+	//sprintf(tmp_string, "counter: %d\n",counter); dgr_output(tmp_string); // DEBUG
 	
 	if (WITH_ALA && pkgsinala) { // Создаем список пакетов для вывода по ALA
-		//pkgsinala++;
-		while (pkgsinala) {
-			strcpy(user_pkgs[cntr].name,ala_pkgs[pkgsinala].name);
-			strcpy(user_pkgs[cntr].version,ala_pkgs[pkgsinala].version);
+		while (counter) {
+			//printf ("::: ala_pkgs[counter].version: %s\n", ala_pkgs[counter].version); //DEBUG
+			strcpy(user_pkgs[cntr].name,ala_pkgs[counter].name);
+			strcpy(user_pkgs[cntr].version,ala_pkgs[counter].version);
 			
 			sprintf(tmp_string,"%s-%s", user_pkgs[cntr].name, user_pkgs[cntr].version);
-			//printf ("tmp_string: %s\n", tmp_string); //DEBUG
 			ret = IsPackageInCache(tmp_string);
-			//printf ("installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
+			//printf ("user_pkgs[cntr].version: %s", user_pkgs[cntr].version); //DEBUG
+			
 			if (!strcmp(user_pkgs[cntr].version, installed_pkg_ver)) {
-				strcpy(user_pkgs[cntr].link,ala_pkgs[pkgsinala].full_path);
+				strcpy(user_pkgs[cntr].link,ala_pkgs[counter].full_path);
 				strcpy(user_pkgs[cntr].repo," [installed]");
 			}
 			else if (ret==1) {
@@ -88,11 +93,11 @@ int PrepareView(char *package) {
 				strcpy(user_pkgs[cntr].repo," (from cache)");
 			}
 			else {
-				strcpy(user_pkgs[cntr].link,ala_pkgs[pkgsinala].full_path);
+				strcpy(user_pkgs[cntr].link,ala_pkgs[counter].full_path);
 				strcpy(user_pkgs[cntr].repo," (from ALA)");
 			}
 			cntr++;
-			pkgsinala--;
+			counter--;
 		}
 	}
 	if 	(WITH_ARM && pkgsinarm) { // Создаем список пакетов для вывода по ARM
@@ -133,7 +138,7 @@ int IsPackageInLogs(char *package) {
 				strcat (full_path_to_packet,"-");
 				strcat (full_path_to_packet,architecture);
 				strcat (full_path_to_packet,".pkg.tar.xz");
-				//printf("%s\n",full_path_to_packet); //DEBUG
+				//printf("full_path_to_packet: %s\n",full_path_to_packet); //DEBUG
 				break; // Package upgraded at least 1 time
 			}
 		}
@@ -149,6 +154,7 @@ int IsPackageInLogs(char *package) {
 	}
 	else return 0;
 }
+
 int IsPackageInCache(char *package) {
 
 	sprintf(full_path_to_packet,"/var/cache/pacman/pkg/%s-%s.pkg.tar.xz", package, architecture);
@@ -167,6 +173,7 @@ size_t curl_handler(char *data, size_t size, size_t nmemb, void *userp) {
 	mem->memory[mem->size] = 0;
 	return realsize;
 }
+
 int IsPackageInAur(char *package) {
 	
 	chunk.memory = malloc(1);
@@ -244,6 +251,7 @@ void ReadPacmanLog() {
 	}
 	fclose(pFile);
 	pacmanlog_length =loglines_counter;
+	//printf ("pacman log contain %d lines\n", pacmanlog_length); //DEBUG
 }
 
 int dgr_output(char *string) {
@@ -277,8 +285,10 @@ int Initialization(char *package) {
     ReadPacmanLog();
     
 	if (WITH_ALA) {
+		//dgr_output ("Reading ALA, "); //DEBUG
 		ala_pkgs = calloc(1, sizeof(struct ala_packs));
 		pkgsinala = ReadALA(package);
+		//printf ("in ALA %d packages\n", pkgsinala); //DEBUG
 		if (!pkgsinala) dgr_output ("No packages in ALA! Disable\n");
 	}	
 	if (WITH_ARM) {
@@ -298,4 +308,17 @@ int Deinitialization() {
 	if (pkgsinala) free (ala_pkgs);
 	closelog();
 	return 0;
+}
+
+char *str_replace(char *str, char *orig, char *rep) {
+  static char buffer[4096];
+  char *p;
+
+  if(!(p = strstr(str, orig))) return str;
+
+  strncpy(buffer, str, p-str);
+  buffer[p-str] = '\0';
+  sprintf(buffer+(p-str), "%s%s", rep, p+strlen(orig));
+
+  return buffer;
 }

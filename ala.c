@@ -47,7 +47,8 @@ int ReadALA(char *package) {
 				int a = strlen(package); strcpy(tmp_string2,fullpkg); tmp_string2[a]='\0';
 				strcpy(ala_pkgs[counter].name,tmp_string2); //printf("%d: ala_pkgs[counter].name = %s\n",counter, ala_pkgs[counter].name); // DEBUG
 				a=ptr-fullpkg; fullpkg[a-1] = '\0'; a = strlen(package); fullpkg = fullpkg+a+1;
-				strcpy(ala_pkgs[counter].version, fullpkg); //printf("%d: ala_pkgs[counter].version = %s\n",counter, fullpkg); // DEBUG
+				ptr = str_replace(fullpkg,"%3A",":");
+				strcpy(ala_pkgs[counter].version, ptr); //printf("%d: ala_pkgs[counter].version = %s\n",counter, ala_pkgs[counter].version); // DEBUG
 
 				counter++;
 			}

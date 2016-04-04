@@ -47,7 +47,7 @@
 	FILE *pFile;
 
 	struct packs{ // -- Действия с пакетами из логов пакмана
-		char name[40]; // название пакета
+		char name[50]; // название пакета
 		char date[10]; // дата операции
 		char time[20]; // время операции
 		char action[20]; // название операции (upgraded, installed, removed)
@@ -72,8 +72,8 @@
 	} *ala_pkgs;
 	//struct ala_packs *ala_pkgs;
 	struct user_packs{ // -- Список пакетов для вывода пользователю
-		char name[40]; // название пакета
-		char version[20]; // Version of package
+		char name[50]; // название пакета
+		char version[10]; // Version of package
 		char link[100]; //Link for download
 		char repo[20]; // ARM, ALA, Cache
 	} *user_pkgs;
