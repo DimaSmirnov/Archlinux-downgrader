@@ -74,7 +74,7 @@
 	struct user_packs{ // -- Список пакетов для вывода пользователю
 		char name[50]; // название пакета
 		char version[10]; // Version of package
-		char link[100]; //Link for download
+		char link[200]; //Link for download
 		char repo[20]; // ARM, ALA, Cache
 	} *user_pkgs;
 	//struct user_packs *user_pkgs;

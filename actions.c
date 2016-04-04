@@ -20,10 +20,10 @@ char* GetChoiseForPackage( char *package) {
 
 	int showpkgs = PrepareView(package); // Готовим массив со списком пакетов для отображения пользователю
 	
-	for (int i=0;i<=MAX_PKGS_FOR_USER && i<=showpkgs;i++) {
+	for (int i=0;i<MAX_PKGS_FOR_USER && i<=showpkgs;i++) {
 		sprintf(tmp_string, "%d: %s-%s %s\n", i+1, user_pkgs[i].name, user_pkgs[i].version, user_pkgs[i].repo); 
 		dgr_output(tmp_string);
-		//sprintf(tmp_string, "%s\n", i, user_pkgs[i].link); dgr_output(tmp_string); //DEBUG
+		//printf("%s\n", user_pkgs[i].link); //DEBUG
 	}
 	
 	dgr_output (">> Please enter package number, [q] to quit ");
