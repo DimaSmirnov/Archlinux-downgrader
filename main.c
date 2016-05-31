@@ -11,7 +11,7 @@
 #define MAX_PKGS_FOR_USER 30
 #define WITH_ALA 1
 #define WITH_ARM 0
-#define VERSION "2.0.0-2"
+#define VERSION "2.0.0-3"
 
 
 #include "variables.h"
