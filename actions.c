@@ -49,19 +49,25 @@ int IsPackageAvailable(char *package) {
 	pkg = alpm_db_get_pkg(db,(const char*)package);
 	const char *pkgr= alpm_pkg_get_url(pkg);
 	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) {  installed_pkg_ver = alpm_pkg_get_version(pkg);
-		//printf ("installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
+		//printf ("1. installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
 		return 0; } else return 1; }
 	db = alpm_register_syncdb(alpm_handle, "extra", siglevel);
 	pkg = alpm_db_get_pkg(db,(const char*)package);
 	pkgr= alpm_pkg_get_url(pkg);
 	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) { installed_pkg_ver = alpm_pkg_get_version(pkg);
-		//printf ("installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
+		//printf ("2. installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
 		return 0; } else return 1; }
 	db = alpm_register_syncdb(alpm_handle, "community", siglevel);
 	pkg = alpm_db_get_pkg(db,(const char*)package);
 	pkgr= alpm_pkg_get_url(pkg);
 	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) { installed_pkg_ver = alpm_pkg_get_version(pkg);
-		//printf ("installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
+		//printf ("3. installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
+		return 0; } else return 1; }
+	db = alpm_register_syncdb(alpm_handle, "multilib", siglevel);
+	pkg = alpm_db_get_pkg(db,(const char*)package);
+	pkgr= alpm_pkg_get_url(pkg);
+	if (pkgr) { int i = IsPackageInstalled(package); if (i==1) { installed_pkg_ver = alpm_pkg_get_version(pkg);
+		//printf ("4. installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
 		return 0; } else return 1; }
 	return 2;
 	
