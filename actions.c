@@ -390,7 +390,6 @@ int callv(const char * path, char *arg0, ...) {
     } while(arg != 0 && i < sizeof(args) / sizeof(args[0]));
     va_end(vargs);
 
-    args[i] = 0;
     args[sizeof(args) / sizeof(args[0]) - 1] = 0;
 
     return call(path, args);
@@ -432,11 +431,10 @@ int sudov(char * executable, ...) {
     do {
         arg = va_arg(vargs, char*);
         args[i++] = arg;
-    } while(arg != 0 && i < sizeof(args) / sizeof(char *));
+    } while(arg != 0 && i < sizeof(args) / sizeof(args[0]));
     va_end(vargs);
 
-    args[i] = 0;
-    args[sizeof(args) / sizeof(char *) - 1] = 0;
+    args[sizeof(args) / sizeof(args[0]) - 1] = 0;
 
     return sudo(args);
 }
