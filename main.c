@@ -55,9 +55,10 @@ int main(int argc, char **argv) {
 		if (!strcmp(str,"q")) { Deinitialization(); return 0; }
 		else pac_num = atoi(str);
 		if (pac_num>MAX_PKGS_FOR_USER) { Deinitialization(); return 0; }
-		strcpy(install_command,"sudo pacman -U "); strcat(install_command, user_pkgs[pac_num-1].link);
+		// strcpy(install_command,"sudo pacman -U "); strcat(install_command, user_pkgs[pac_num-1].link);
 		//printf ("%s\n",install_command); // DEBUG
-		system(install_command);
+		// system(install_command);
+		sudov("pacman", "-U", user_pkgs[pac_num-1].link, 0);
 	}
 	Deinitialization();
 return 0;	
