@@ -16,7 +16,7 @@
 	int Initialization(char *);
 	int Deinitialization();
 	int IsPackageAvailable( char *);
-	int IsPackageInLogs( char *);
+	int IsPackageInLogs( char *, char *);
 	int IsPackageInCache( char *);
 	int IsPackageInAur( char *);
 	int IsPackageInArm( char *, char *);
@@ -30,6 +30,10 @@
 	char* GetChoiseForPackage( char *);
 	char* str_replace(char*,char*,char*);
  	int dgr_output( char *);
+	int sudov(char*, ...);
+	int callv(const char *, char *, ...);
+	int call(const char *, char * const*);
+	int sudo(char**);
  	
 	alpm_handle_t *alpm_handle;
 	alpm_db_t *db;
@@ -39,7 +43,6 @@
 	char *str, *architecture;
 	const char *pkgname;
 	char full_path_to_packet[300], tmp_string[200], full[500];
-	char install_command[300]; // Команда для установки
 	char install_version[30]; // Версия пакета для установки
 	const char* installed_pkg_ver;  // Текущая установленная версия
 	long int pacmanlog_length;

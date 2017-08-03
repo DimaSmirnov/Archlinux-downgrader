@@ -1,9 +1,13 @@
-int DowngradePackage( char *package) {
+#include <sys/wait.h>
+#include <unistd.h>
 
-    int isincache = IsPackageInLogs(package); // Here also parsing pacman.log and using flag actions.package_never_upgraded
+int DowngradePackage( char *package) {
+    char packagepath[256];
+    int isincache = IsPackageInLogs(package, packagepath); // Here also parsing pacman.log and using flag actions.package_never_upgraded
     if (isincache) {
         if (!silent) { sprintf(tmp_string, "Downgrading from Cache, to version %s\n",install_version); dgr_output(tmp_string); }
-        system(install_command);
+        // system(install_command);
+        sudov("pacman", "-U", packagepath, 0);
         return 0;
     }
     strcpy(install_version,installed_pkg_ver);
@@ -12,17 +16,19 @@ int DowngradePackage( char *package) {
         int i=1;
         //sprintf(tmp_string, "%d: %s-%s %s\n", i+1, user_pkgs[i].name, user_pkgs[i].version, user_pkgs[i].repo); dgr_output(tmp_string);
         if (!silent) { sprintf(tmp_string, "Downgrade %s from ALA to version %s\n", package,user_pkgs[i].version); dgr_output(tmp_string); }
-        strcpy(install_command,"sudo pacman -U "); strcat(install_command,user_pkgs[i].link);
+        // strcpy(install_command,"sudo pacman -U "); strcat(install_command,user_pkgs[i].link);
         //printf("%s\n", install_command); //DEBUG
-        system(install_command);
+        // system(install_command);
+        sudov("pacman", "-U", user_pkgs[i].link, 0);
         return 0;
     }
     if (WITH_ARM) {
         ret = IsPackageInArm(package, install_version);
         if (arm_pkgs[ret].link) {
             if (!silent) { sprintf(tmp_string, "Downgrade %s from ARM to version %s\n", package,arm_pkgs[ret+2].version); dgr_output(tmp_string); }
-            strcpy(install_command,"sudo pacman -U "); strcat(install_command,arm_pkgs[ret+2].link);
-            system(install_command);
+            // strcpy(install_command,"sudo pacman -U "); strcat(install_command,arm_pkgs[ret+2].link);
+            // system(install_command);
+            sudov("pacman", "-U", arm_pkgs[ret+2].link, 0);
             return 0;
         }
     }
@@ -144,7 +150,7 @@ int PrepareView(char *package) {
 return cntr-1;
 }
 
-int IsPackageInLogs(char *package) {
+int IsPackageInLogs(char *package, char *packagepath) {
 
     for (;pacmanlog_length>0;pacmanlog_length--) {
         if (!strcmp(package,pkgs[pacmanlog_length].name) && !strcmp("upgraded",pkgs[pacmanlog_length].action)) { // found necessary package
@@ -169,9 +175,10 @@ int IsPackageInLogs(char *package) {
     strcpy(full_path_to_packet,i_com); // unescape symbol ":" for pkg "go" for example
 
     if(access(full_path_to_packet, F_OK) != -1) { // previous version available in cache
-        strcpy(tmp_string,"sudo pacman -U "); // install
-        strcat(tmp_string,full_path_to_packet);
-        strcpy(install_command,tmp_string);
+        // strcpy(tmp_string,"sudo pacman -U "); // install
+        // strcat(tmp_string,full_path_to_packet);
+        // strcpy(install_command,tmp_string);
+        if(packagepath) strcpy(packagepath, full_path_to_packet);
         //printf("install_command: %s\n",install_command); //DEBUG
         return 1;
     }
@@ -349,4 +356,85 @@ char *str_replace(char *str, char *orig, char *rep) {
   sprintf(buffer+(p-str), "%s%s", rep, p+strlen(orig));
 
   return buffer;
+}
+
+int call(const char* path, char *const *args) {
+    pid_t pid;
+    int status;
+
+    pid = fork();
+    if(pid == 0) { /* child */
+        execv(path, args);
+        perror("Error during exec");
+        return 0;
+    } else { /* parent */
+        waitpid(pid, &status, 0);
+        return WEXITSTATUS(status);
+    }
+
+}
+
+int callv(const char * path, char *arg0, ...) {
+    va_list vargs;
+    char *args[100];
+    char *arg;
+    unsigned int i = 0;
+
+    args[i++] = arg0;
+
+    va_start(vargs, arg0);
+
+    do {
+        arg = va_arg(vargs, char*);
+        args[i++] = arg;
+    } while(arg != 0 && i < sizeof(args) / sizeof(args[0]));
+    va_end(vargs);
+
+    args[sizeof(args) / sizeof(args[0]) - 1] = 0;
+
+    return call(path, args);
+}
+
+int sudo(char **args) {
+    int len;
+    int result;
+    char **newargs;
+    char **p = args;
+    while(*p) p++;
+    len = p - args + 1;
+
+    newargs = malloc(sizeof(char*) * (len + 2));
+    if(!newargs) {
+        perror("Error during malloc");
+    }
+
+    newargs[0] = "sudo";
+    memcpy(&newargs[1], args, sizeof(char*) * len);
+    newargs[len + 1] = 0;
+
+    result = call("/usr/bin/sudo", newargs);
+    free(newargs);
+
+    return result;
+}
+
+int sudov(char * executable, ...) {
+    va_list vargs;
+    char *args[100];
+    char *arg;
+    unsigned int i = 0;
+
+    args[i++] = executable;
+
+    va_start(vargs, executable);
+
+    do {
+        arg = va_arg(vargs, char*);
+        args[i++] = arg;
+    } while(arg != 0 && i < sizeof(args) / sizeof(args[0]));
+    va_end(vargs);
+
+    args[sizeof(args) / sizeof(args[0]) - 1] = 0;
+
+    return sudo(args);
 }
