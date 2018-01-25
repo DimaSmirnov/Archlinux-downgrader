@@ -44,6 +44,7 @@ char* GetChoiseForPackage( char *package) {
 }
 int IsPackageAvailable(char *package) {
     alpm_siglevel_t siglevel=0;
+    char *env_repo;
 
     db = alpm_register_syncdb(alpm_handle, "core", siglevel);
     pkg = alpm_db_get_pkg(db,(const char*)package);
@@ -69,6 +70,15 @@ int IsPackageAvailable(char *package) {
     if (pkgr) { int i = IsPackageInstalled(package); if (i==1) { installed_pkg_ver = alpm_pkg_get_version(pkg);
         //printf ("4. installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
         return 0; } else return 1; }
+    env_repo=getenv("DOWNGRADE_REPO");
+    if(env_repo!=NULL) {
+        db = alpm_register_syncdb(alpm_handle, env_repo, siglevel);
+        pkg = alpm_db_get_pkg(db,(const char*)package);
+        pkgr= alpm_pkg_get_url(pkg);
+        if (pkgr) { int i = IsPackageInstalled(package); if (i==1) { installed_pkg_ver = alpm_pkg_get_version(pkg);
+            //printf ("4. installed_pkg_ver: %s\n", installed_pkg_ver); //DEBUG
+            return 0; } else return 1; }
+    }
     return 2;
 
 // return 0 - pkg available

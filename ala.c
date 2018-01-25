@@ -1,12 +1,17 @@
 int ReadALA(char *package) {
 	char substr[2];
-	char ala_path[150], tmp_string2[200];
-	char *fullpkg, *ptr;
+	char ala_path[250], tmp_string2[200];
+	char *fullpkg, *ptr, *env_url;
 	
 	strcpy(tmp_string,package);
 	strncpy(substr, package, 1);
 	substr[1]='\0';
-	sprintf (ala_path, "https://archive.archlinux.org/packages/%s/%s/",substr,tmp_string);
+	env_url=getenv("DOWNGRADE_ALA_URL");
+	if(env_url!=NULL) {
+		sprintf (ala_path, "%s/%s/%s/",env_url,substr,tmp_string);
+	} else {
+		sprintf (ala_path, "https://archive.archlinux.org/packages/%s/%s/",substr,tmp_string);
+	}
 	strcpy(package,tmp_string);
 
 	chunk.memory = malloc(1);
