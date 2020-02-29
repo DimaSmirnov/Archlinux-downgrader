@@ -25,7 +25,7 @@ char* GetChoiseForPackage( char *package) {
 		dgr_output(tmp_string);
 	}
 	
-	dgr_output (">> Please enter package number, [q] to quit ");
+	dgr_output (">> Please enter package number, [q] to quit: ");
 	scanf ("%s",tmp_string);
 	return tmp_string;
 }
